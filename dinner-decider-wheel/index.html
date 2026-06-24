@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What&#x27;s for Dinner? — Indian Food Decision Wheel | Wheel Bolo</title>
+  <meta name="description" content="Can&#x27;t decide what to cook or order? Spin the dinner decider wheel loaded with Indian food favourites and let it choose tonight&#x27;s meal. Free and fun." />
+  <link rel="canonical" href="https://wheelbolo.com/dinner-decider-wheel/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Wheel Bolo" />
+  <meta property="og:title" content="What&#x27;s for Dinner? — Indian Food Decision Wheel | Wheel Bolo" />
+  <meta property="og:description" content="Can&#x27;t decide what to cook or order? Spin the dinner decider wheel loaded with Indian food favourites and let it choose tonight&#x27;s meal. Free and fun." />
+  <meta property="og:url" content="https://wheelbolo.com/dinner-decider-wheel/" />
+  <meta property="og:image" content="https://wheelbolo.com/assets/img/og-default.png" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="What&#x27;s for Dinner? — Indian Food Decision Wheel | Wheel Bolo" />
+  <meta name="twitter:description" content="Can&#x27;t decide what to cook or order? Spin the dinner decider wheel loaded with Indian food favourites and let it choose tonight&#x27;s meal. Free and fun." />
+  <meta name="twitter:image" content="https://wheelbolo.com/assets/img/og-default.png" />
+
+  <meta name="theme-color" content="#FF8A1E" />
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/img/icon-180.png" />
+
+  <link rel="preload" href="/assets/fonts/baloo2-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/fonts/mukta-400-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+
+  <!-- Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID after approval -->
+  <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
+  <link rel="preconnect" href="https://googleads.g.doubleclick.net" crossorigin />
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://wheelbolo.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Dinner Decider",
+      "item": "https://wheelbolo.com/dinner-decider-wheel/"
+    }
+  ]
+}
+  </script>
+  <script>window.SPIN_CONFIG = {"entries": ["Biryani", "Masala Dosa", "Paneer Butter Masala", "Chole Bhature", "Rajma Chawal", "Pav Bhaji", "Maggi", "Idli Sambhar", "Khichdi", "Veg Pulao", "Roti Sabzi", "Pasta", "Order out 🛵"], "mode": "random"};</script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="/"><span aria-hidden="true">🎡</span> Wheel <span class="brand-dot">Bolo</span></a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="/#templates" data-i18n="nav.templates">Templates</a>
+        <a href="/about/" data-i18n="nav.about">About</a>
+        <a href="/contact/" data-i18n="nav.contact">Contact</a>
+      </nav>
+      <div class="header-tools">
+        <button class="icon-btn lang-toggle" type="button" data-lang-toggle aria-label="भाषा / Language">EN / हिं</button>
+        <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch theme">🌙</button>
+      </div>
+    </div>
+  </header>
+
+    <div class="container">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a> <span aria-hidden="true">›</span>
+        <span aria-current="page">Dinner Decider</span>
+      </nav>
+    </div>
+
+  <main id="main">
+    <section class="hero">
+      <div class="container">
+        <div class="app-grid">
+          <div class="wheel-col">
+            <div class="wheel-stage">
+              <canvas id="wheel-canvas" class="wheel-canvas" role="img" aria-label="Spinning wheel of options"></canvas>
+              <span class="wheel-pointer" aria-hidden="true">
+                <svg viewBox="0 0 46 54" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 27 L43 4 L33 27 L43 50 Z" fill="#E5247B" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <button class="wheel-hub-btn" type="button" data-spin aria-label="Spin the wheel">
+                <span data-i18n="app.hubSpin">SPIN</span>
+              </button>
+            </div>
+            <p id="winner-banner" class="winner-banner" role="status" aria-live="polite"></p>
+          </div>
+
+          <div class="controls-col">
+            <div class="panel">
+              <label class="field-label" for="entries-input" data-i18n="app.entriesLabel">Enter names or options (one per line)</label>
+              <textarea id="entries-input" class="entries-input" spellcheck="false"
+                aria-describedby="entries-meta"
+                data-i18n-attr="placeholder:app.entriesPlaceholder"
+                placeholder="One per line"></textarea>
+              <p id="entries-meta" class="entries-meta"></p>
+
+              <div class="controls-row">
+                <span class="field-label" id="mode-label" style="margin:0" data-i18n="app.mode">Mode</span>
+                <div class="segmented" role="radiogroup" aria-labelledby="mode-label">
+                  <input type="radio" name="mode" id="mode-random" value="random" checked />
+                  <label for="mode-random" data-i18n="app.modeRandom">Random pick</label>
+                  <input type="radio" name="mode" id="mode-elim" value="elim" />
+                  <label for="mode-elim" data-i18n="app.modeElim">Elimination</label>
+                </div>
+              </div>
+              <p id="mode-hint" class="entries-meta"></p>
+
+              <div class="action-row">
+                <button class="btn btn-primary btn-lg" type="button" data-spin>
+                  <span aria-hidden="true">🎯</span> <span data-spin-label data-i18n="app.spin">Spin the Wheel</span>
+                </button>
+                <button class="btn btn-secondary" type="button" data-shuffle data-i18n="app.shuffle">Shuffle</button>
+                <button class="btn btn-secondary" type="button" data-reset data-i18n="app.reset">Reset</button>
+              </div>
+              <div class="action-row" style="margin-top:0.6rem">
+                <button class="btn btn-secondary" type="button" data-share>
+                  <span aria-hidden="true">📲</span> <span data-i18n="app.share">Share result</span>
+                </button>
+                <button class="btn btn-secondary" type="button" data-copy-link>
+                  <span aria-hidden="true">🔗</span> <span data-i18n="app.copyLink">Copy link</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="history">
+              <h2><span aria-hidden="true">📜</span> <span data-i18n="history.title">Spin history</span></h2>
+              <p id="history-empty" class="history-empty" data-i18n="history.empty">No spins yet — your results will appear here.</p>
+              <ol id="history-list" class="history-list" aria-live="polite"></ol>
+            </div>
+          </div>
+        </div>
+      </div>
+      <canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
+    </section>
+
+    <section class="section hero-copy">
+      <div class="container">
+        <span class="hero-eyebrow">🍛 What's cooking tonight?</span>
+        <h1>What&#x27;s for Dinner? Decision Wheel</h1>
+        <p class="hero-lead">End the daily &#x27;kya banaye?&#x27; debate. Spin the wheel of Indian favourites and let dinner decide itself.</p>
+      </div>
+    </section>
+
+    <div class="container">
+      <div class="ad-slot">
+        <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="0000000000" data-ad-format="auto" data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+    </div>
+
+    <section class="section">
+      <article class="container prose">
+        <h2>Never argue about dinner again</h2>
+        <p>"Aaj khaane mein kya banaye?" is the question that stumps every household, every single evening. The Dinner Decider takes the decision off your plate. The wheel comes loaded with everyday Indian favourites — from biryani and masala dosa to rajma chawal, pav bhaji and the ever-reliable Maggi — plus a cheeky "Order out" slice for the nights you just can't be bothered.</p>
+        <h3>How to use it</h3>
+        <ol>
+          <li>Spin as-is for a quick decision, or edit the list to match what's in your kitchen.</li>
+          <li>Add family favourites, leftovers to finish, or restaurants you like to order from.</li>
+          <li>Spin — and commit to whatever the wheel lands on. No re-rolls!</li>
+        </ol>
+        <h3>Make it your own</h3>
+        <p>Cooking for the week? Add seven options and use it to plan a different meal each day. Running a tiffin service or a small kitchen? Use it to surprise customers with a dish of the day. Because your list is saved right in the page link, you can bookmark your personalised dinner wheel or share it with the family cook in one tap. Simple, fast, and a little bit fun — exactly what a tired evening needs.</p>
+      </article>
+    </section>
+    <section class="section section-tinted">
+      <div class="container">
+        <div class="section-head"><h2 data-i18n="related.title">You might also like</h2></div>
+        <div class="related-grid">
+          <a class="template-card" href="/ipl-team-picker-wheel/">
+            <span class="tc-emoji" aria-hidden="true">🏏</span>
+            <span class="tc-title">IPL Team Picker</span>
+            <p class="tc-desc">Spin to assign an IPL team for fantasy or gully cricket.</p>
+          </a>
+          <a class="template-card" href="/classroom-name-picker/">
+            <span class="tc-emoji" aria-hidden="true">🎓</span>
+            <span class="tc-title">Classroom Name Picker</span>
+            <p class="tc-desc">Pick a student fairly for answers, turns and group work.</p>
+          </a>
+          <a class="template-card" href="/diwali-lucky-draw-wheel/">
+            <span class="tc-emoji" aria-hidden="true">🪔</span>
+            <span class="tc-title">Diwali Lucky Draw</span>
+            <p class="tc-desc">Run a fair lucky draw at your Diwali party or office.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span aria-hidden="true">🎡</span> Wheel <span class="brand-dot">Bolo</span></a>
+        <p>A free spin-the-wheel random picker. Fair, fast, private — and fun.</p>
+      </div>
+      <div>
+        <h2>Wheels</h2>
+        <ul class="footer-links">
+          <li><a href="/classroom-name-picker/">Classroom Name Picker</a></li>
+          <li><a href="/diwali-lucky-draw-wheel/">Diwali Lucky Draw</a></li>
+          <li><a href="/ipl-team-picker-wheel/">IPL Team Picker</a></li>
+          <li><a href="/dinner-decider-wheel/">Dinner Decider</a></li>
+          <li><a href="/secret-santa-picker/">Secret Santa Picker</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Wheel Bolo</h2>
+        <ul class="footer-links">
+          <li><a href="/about/">About</a></li>
+          <li><a href="/contact/">Contact</a></li>
+          <li><a href="/privacy-policy/">Privacy Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      © <span data-year>2026</span> Wheel Bolo · Made with 🎡 for the world
+    </div>
+  </footer>
+
+  <script src="/assets/js/i18n.js"></script>
+  <script src="/assets/js/wheel-engine.js"></script>
+</body>
+</html>

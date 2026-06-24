@@ -1,0 +1,10 @@
+Fonts in this directory are subject to the SIL Open Font License, Version 1.1.
+
+- Baloo 2 — Copyright (c) Ek Type. https://fonts.google.com/specimen/Baloo+2
+- Mukta — Copyright (c) Ek Type. https://fonts.google.com/specimen/Mukta
+
+Full license text: https://openfontlicense.org/
+
+These woff2 files are latin + devanagari subsets downloaded from Google Fonts
+(fonts.gstatic.com) and self-hosted to avoid third-party network requests.
+Baloo 2 is a variable font; the single weight file covers the 400–800 axis.

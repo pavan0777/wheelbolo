@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wheel Bolo — Free Spin the Wheel Random Name Picker</title>
+  <meta name="description" content="Spin the Wheel online — a free random name picker & decision wheel. Add names, spin, and pick a fair winner. Ready-made templates for classrooms, raffles, team pickers, dinner & more. English & Hindi." />
+  <link rel="canonical" href="https://wheelbolo.com/" />
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Wheel Bolo" />
+  <meta property="og:title" content="Wheel Bolo — Free Spin the Wheel Random Picker" />
+  <meta property="og:description" content="Add names, spin the wheel, pick a fair winner. Free random picker & decision wheel — classroom, raffle, team, dinner templates & more." />
+  <meta property="og:url" content="https://wheelbolo.com/" />
+  <meta property="og:image" content="https://wheelbolo.com/assets/img/og-default.png" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Wheel Bolo — Free Spin the Wheel Random Picker" />
+  <meta name="twitter:description" content="Add names, spin the wheel, pick a fair winner — free, no sign-up." />
+  <meta name="twitter:image" content="https://wheelbolo.com/assets/img/og-default.png" />
+
+  <meta name="theme-color" content="#FF8A1E" />
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/img/icon-180.png" />
+
+  <!-- Preload primary fonts for faster first paint -->
+  <link rel="preload" href="/assets/fonts/baloo2-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/fonts/mukta-400-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+
+  <!-- Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID after approval -->
+  <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
+  <link rel="preconnect" href="https://googleads.g.doubleclick.net" crossorigin />
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+  <!-- Structured data: WebApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Wheel Bolo",
+    "url": "https://wheelbolo.com/",
+    "description": "A free online Spin the Wheel random name picker and decision wheel for fair, fun decisions.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any (web browser)",
+    "browserRequirements": "Requires JavaScript",
+    "inLanguage": ["en", "hi"],
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "publisher": { "@type": "Organization", "name": "Wheel Bolo", "url": "https://wheelbolo.com/" }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="/"><span aria-hidden="true">🎡</span> Wheel <span class="brand-dot">Bolo</span></a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="/#templates" data-i18n="nav.templates">Templates</a>
+        <a href="/about/" data-i18n="nav.about">About</a>
+        <a href="/contact/" data-i18n="nav.contact">Contact</a>
+      </nav>
+      <div class="header-tools">
+        <button class="icon-btn lang-toggle" type="button" data-lang-toggle aria-label="भाषा / Language">EN / हिं</button>
+        <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch theme">🌙</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ===================== HERO + WHEEL APP ===================== -->
+    <section class="hero">
+      <div class="container">
+        <div class="app-grid">
+          <!-- Wheel -->
+          <div class="wheel-col">
+            <div class="wheel-stage">
+              <canvas id="wheel-canvas" class="wheel-canvas" role="img" aria-label="Spinning wheel of options"></canvas>
+              <span class="wheel-pointer" aria-hidden="true">
+                <svg viewBox="0 0 46 54" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 27 L43 4 L33 27 L43 50 Z" fill="#E5247B" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <button class="wheel-hub-btn" type="button" data-spin aria-label="Spin the wheel">
+                <span data-i18n="app.hubSpin">SPIN</span>
+              </button>
+            </div>
+            <p id="winner-banner" class="winner-banner" role="status" aria-live="polite"></p>
+          </div>
+
+          <!-- Controls -->
+          <div class="controls-col">
+            <div class="panel">
+              <label class="field-label" for="entries-input" data-i18n="app.entriesLabel">Enter names or options (one per line)</label>
+              <textarea id="entries-input" class="entries-input" spellcheck="false"
+                aria-describedby="entries-meta"
+                data-i18n-attr="placeholder:app.entriesPlaceholder"
+                placeholder="Aarav&#10;Diya&#10;Kabir&#10;Myra&#10;Vihaan"></textarea>
+              <p id="entries-meta" class="entries-meta"></p>
+
+              <div class="controls-row">
+                <span class="field-label" id="mode-label" style="margin:0" data-i18n="app.mode">Mode</span>
+                <div class="segmented" role="radiogroup" aria-labelledby="mode-label">
+                  <input type="radio" name="mode" id="mode-random" value="random" checked />
+                  <label for="mode-random" data-i18n="app.modeRandom">Random pick</label>
+                  <input type="radio" name="mode" id="mode-elim" value="elim" />
+                  <label for="mode-elim" data-i18n="app.modeElim">Elimination</label>
+                </div>
+              </div>
+              <p id="mode-hint" class="entries-meta"></p>
+
+              <div class="action-row">
+                <button class="btn btn-primary btn-lg" type="button" data-spin>
+                  <span aria-hidden="true">🎯</span> <span data-spin-label data-i18n="app.spin">Spin the Wheel</span>
+                </button>
+                <button class="btn btn-secondary" type="button" data-shuffle data-i18n="app.shuffle">Shuffle</button>
+                <button class="btn btn-secondary" type="button" data-reset data-i18n="app.reset">Reset</button>
+              </div>
+              <div class="action-row" style="margin-top:0.6rem">
+                <button class="btn btn-secondary" type="button" data-share>
+                  <span aria-hidden="true">📲</span> <span data-i18n="app.share">Share result</span>
+                </button>
+                <button class="btn btn-secondary" type="button" data-copy-link>
+                  <span aria-hidden="true">🔗</span> <span data-i18n="app.copyLink">Copy link</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="history">
+              <h2><span aria-hidden="true">📜</span> <span data-i18n="history.title">Spin history</span></h2>
+              <p id="history-empty" class="history-empty" data-i18n="history.empty">No spins yet — your results will appear here.</p>
+              <ol id="history-list" class="history-list" aria-live="polite"></ol>
+            </div>
+          </div>
+        </div>
+      </div>
+      <canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
+    </section>
+
+    <!-- Intro copy (below the tool so the wheel + controls lead) -->
+    <section class="section hero-copy">
+      <div class="container">
+        <span class="hero-eyebrow">✨ Free forever · No sign-up</span>
+        <h1>Spin the Wheel &amp; pick a winner</h1>
+        <p class="hero-lead">Type your names or options, hit spin, and let the wheel decide — fair, fun, and shareable on WhatsApp in one tap.</p>
+      </div>
+    </section>
+
+    <!-- Ad slot -->
+    <div class="container">
+      <div class="ad-slot">
+        <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="0000000000" data-ad-format="auto" data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+    </div>
+
+    <!-- ===================== TEMPLATES ===================== -->
+    <section class="section section-tinted" id="templates">
+      <div class="container">
+        <div class="section-head">
+          <h2 data-i18n="tpl.heading">Ready-made wheels for every occasion</h2>
+          <p data-i18n="tpl.sub">One tap and the wheel is set up for you.</p>
+        </div>
+        <div class="template-grid">
+          <a class="template-card" href="/classroom-name-picker/">
+            <span class="tc-emoji" aria-hidden="true">🎓</span>
+            <span class="tc-title">Classroom Name Picker</span>
+            <p class="tc-desc">Pick a student fairly for answers, turns and group work — Hindi &amp; English names.</p>
+          </a>
+          <a class="template-card" href="/diwali-lucky-draw-wheel/">
+            <span class="tc-emoji" aria-hidden="true">🪔</span>
+            <span class="tc-title">Diwali Lucky Draw</span>
+            <p class="tc-desc">Run a fair lucky draw at your Diwali party, office or housing society.</p>
+          </a>
+          <a class="template-card" href="/ipl-team-picker-wheel/">
+            <span class="tc-emoji" aria-hidden="true">🏏</span>
+            <span class="tc-title">IPL Team Picker</span>
+            <p class="tc-desc">Spin to assign an IPL team for fantasy, gully cricket or friendly bets.</p>
+          </a>
+          <a class="template-card" href="/dinner-decider-wheel/">
+            <span class="tc-emoji" aria-hidden="true">🍛</span>
+            <span class="tc-title">What's for Dinner?</span>
+            <p class="tc-desc">End the daily debate — spin the wheel of dinner favourites.</p>
+          </a>
+          <a class="template-card" href="/secret-santa-picker/">
+            <span class="tc-emoji" aria-hidden="true">🎁</span>
+            <span class="tc-title">Secret Santa Picker</span>
+            <p class="tc-desc">Draw names for a gift exchange without slips of paper or rigging.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== ABOUT THE TOOL (SEO copy) ===================== -->
+    <section class="section">
+      <article class="container prose">
+        <h2>A random picker wheel that just works</h2>
+        <p>Wheel Bolo is a free <strong>spin the wheel</strong> tool — a colourful random name picker and decision wheel you can use for anything that needs a fair, unbiased choice. Type a list of names or options, give the wheel a spin, and watch it glide to a stop on one lucky winner with a burst of confetti. There is nothing to install and nothing to sign up for.</p>
+
+        <h3>How to use the wheel</h3>
+        <ol>
+          <li><strong>Add your entries.</strong> Type one name per line in the box, or paste a comma-separated list. The wheel updates instantly as you type.</li>
+          <li><strong>Choose a mode.</strong> Use <em>Random pick</em> when the winner can be chosen again, or <em>Elimination</em> to remove each winner after they are picked — perfect for raffles and tournaments.</li>
+          <li><strong>Spin.</strong> Tap the centre of the wheel or the big Spin button. The winner is highlighted and announced.</li>
+          <li><strong>Share.</strong> Hit <em>Share result</em> to send a winner card to WhatsApp, or <em>Copy link</em> to share the exact wheel you built — your list travels in the link, no account needed.</li>
+        </ol>
+
+        <h3>Why people love it</h3>
+        <p>Teachers use it to call on students fairly. Families use it to settle what to cook for dinner or who does the dishes. Office teams use it for lucky draws and standup picks. Sports fans use it to assign teams. Because everything happens in your browser and your list lives only in the link you share, it is fast, private, and works beautifully on a phone — which is exactly how most people use it.</p>
+
+        <h3>Fair and random by design</h3>
+        <p>Each spin picks a winner using your browser's cryptographic random number generator, so every entry has an equal chance every single time. No hidden weighting, no tracking of who won before. Reload the page and the wheel forgets everything.</p>
+
+        <p class="tag-row">
+          <a class="btn btn-secondary" href="/classroom-name-picker/">Classroom picker</a>
+          <a class="btn btn-secondary" href="/diwali-lucky-draw-wheel/">Diwali lucky draw</a>
+          <a class="btn btn-secondary" href="/ipl-team-picker-wheel/">IPL team picker</a>
+        </p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span aria-hidden="true">🎡</span> Wheel <span class="brand-dot">Bolo</span></a>
+        <p>A free spin-the-wheel random picker. Fair, fast, private — and fun.</p>
+      </div>
+      <div>
+        <h2>Wheels</h2>
+        <ul class="footer-links">
+          <li><a href="/classroom-name-picker/">Classroom Name Picker</a></li>
+          <li><a href="/diwali-lucky-draw-wheel/">Diwali Lucky Draw</a></li>
+          <li><a href="/ipl-team-picker-wheel/">IPL Team Picker</a></li>
+          <li><a href="/dinner-decider-wheel/">Dinner Decider</a></li>
+          <li><a href="/secret-santa-picker/">Secret Santa Picker</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Wheel Bolo</h2>
+        <ul class="footer-links">
+          <li><a href="/about/">About</a></li>
+          <li><a href="/contact/">Contact</a></li>
+          <li><a href="/privacy-policy/">Privacy Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      © <span data-year>2026</span> Wheel Bolo · Made with 🎡 for the world
+    </div>
+  </footer>
+
+  <script src="/assets/js/i18n.js"></script>
+  <script src="/assets/js/wheel-engine.js"></script>
+</body>
+</html>

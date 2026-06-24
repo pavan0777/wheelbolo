@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Wheel Bolo wheel">
+  <defs>
+    <clipPath id="c"><circle cx="32" cy="32" r="30"/></clipPath>
+  </defs>
+  <g clip-path="url(#c)">
+    <g>
+      <path d="M32 32 L32 2 A30 30 0 0 1 62 32 Z" fill="#FF8A1E"/>
+      <path d="M32 32 L62 32 A30 30 0 0 1 32 62 Z" fill="#E5247B"/>
+      <path d="M32 32 L32 62 A30 30 0 0 1 2 32 Z" fill="#0FA3A3"/>
+      <path d="M32 32 L2 32 A30 30 0 0 1 32 2 Z" fill="#FFC53D"/>
+    </g>
+  </g>
+  <circle cx="32" cy="32" r="30" fill="none" stroke="#2B0A3D" stroke-width="3"/>
+  <circle cx="32" cy="32" r="7" fill="#FFF7EC" stroke="#2B0A3D" stroke-width="3"/>
+  <path d="M64 32 L44 26 L50 32 L44 38 Z" fill="#2B0A3D"/>
+</svg>

@@ -1,0 +1,6 @@
+# Optional — a static Cloudflare Pages deploy needs NO build step and NO wrangler.
+# This file is provided only for `wrangler pages` CLI deploys, e.g.:
+#   npx wrangler pages deploy . --project-name wheelbolo
+name = "wheelbolo"
+pages_build_output_dir = "."
+compatibility_date = "2026-06-23"
