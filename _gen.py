@@ -15,6 +15,14 @@ def head(title, desc, canonical, *, og_type="website", og_image="/assets/img/og-
     blocks.append(f'''<!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y0473KQPW5"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){{dataLayer.push(arguments);}}
+    gtag('js', new Date());
+    gtag('config', 'G-Y0473KQPW5');
+  </script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{html.escape(title)}</title>
@@ -238,6 +246,13 @@ CARDS = {
   "ipl":       ("🏏", "IPL Team Picker", "Spin to assign an IPL team for fantasy or gully cricket.", "/ipl-team-picker-wheel/"),
   "dinner":    ("🍛", "What's for Dinner?", "End the daily debate — spin the wheel of dinner ideas.", "/dinner-decider-wheel/"),
   "santa":     ("🎁", "Secret Santa Picker", "Draw names for a gift exchange without rigging.", "/secret-santa-picker/"),
+  "birthday":  ("🎂", "Birthday Wheel Generator", "Spin to pick party games, a lucky guest or who goes first.", "/birthday-wheel-generator/"),
+  "yesno":     ("🤔", "Yes or No Wheel", "Can't decide? Let the wheel say yes or no.", "/yes-no-wheel/"),
+  "truthdare": ("😈", "Truth or Dare Wheel", "Spin for truths and dares — instant party fun.", "/truth-or-dare-wheel/"),
+  "team":      ("👥", "Team Picker Wheel", "Split players into fair teams with a spin.", "/team-picker-wheel/"),
+  "prize":     ("🎟️", "Prize Wheel", "Spin a prize wheel for rewards and offers.", "/prize-wheel/"),
+  "giveaway":  ("🎉", "Giveaway Wheel", "Pick a random giveaway winner — fair and live.", "/giveaway-wheel/"),
+  "reward":    ("⭐", "Classroom Reward Wheel", "Reward students with fun classroom perks.", "/classroom-reward-wheel/"),
 }
 
 TEMPLATES = [
@@ -370,6 +385,192 @@ TEMPLATES = [
         <p>Whether it's a Christmas Secret Santa at the office, a New Year gift exchange with friends, or a birthday game, this wheel handles any group draw. It works equally well for picking who goes first in a party game, who hosts next, or who does the washing up. Nothing is stored, so when the draw is done, it's done — reset and start a fresh one any time.</p>
 ''',
     "related": ["diwali","classroom","dinner"],
+  },
+  {
+    "slug": "birthday-wheel-generator",
+    "name": "Birthday Wheel Generator",
+    "title": "Birthday Wheel Generator — Party Game Picker | Wheel Bolo",
+    "desc": "A free birthday wheel generator — spin to pick party games, choose a lucky guest, or decide who opens the next gift. Add your own options and play. No sign-up.",
+    "eyebrow": "🎂 Party time",
+    "h1": "Birthday Wheel Generator",
+    "lead": "Make the party fair and fun — spin to pick the next game, a lucky guest, or who goes first.",
+    "mode": "random",
+    "entries": ["Musical Chairs", "Pass the Parcel", "Treasure Hunt", "Dance-off", "Balloon Pop",
+                "Pin the Tail", "Lemon & Spoon Race", "Tug of War", "Karaoke", "Freeze Dance",
+                "Charades", "Piñata"],
+    "article": '''
+        <h2>Spin up the birthday fun</h2>
+        <p>Every birthday party hits the same moment: a room full of excited kids (or grown-ups) and nobody agreeing on what to do next. The Birthday Wheel Generator settles it in one spin. Load it with party games, give it a flick, and let the wheel decide the next activity — no arguments, no "but I wanted to go first", just instant fun with a confetti finish.</p>
+        <h3>Fun ways to use the wheel</h3>
+        <ul>
+          <li><strong>Pick the next game:</strong> spin the pre-loaded list of classic party games and play whatever it lands on.</li>
+          <li><strong>Choose a lucky guest:</strong> swap in your guests' names to pick who wins a prize, cuts the cake, or bursts the piñata.</li>
+          <li><strong>Decide the order:</strong> who opens the first gift, who goes first in a game, or who picks the music.</li>
+          <li><strong>Settle a tie:</strong> two kids both want the same balloon? Let the wheel be the referee.</li>
+        </ul>
+        <h3>Make it your own</h3>
+        <p>The wheel starts with a dozen crowd-pleasing games, but you can replace them with anything — your child's favourite activities, party challenges, dares, or the names of every guest. Type one option per line, or paste a list. Because your setup is saved right in the page link, you can build the perfect party wheel in advance and reopen it on the day, or share it with co-hosts so everyone has the same games ready.</p>
+        <p>It is free, works on any phone at the party, and keeps everything in your browser — spin as many times as the celebration needs.</p>
+''',
+    "related": ["classroom", "santa", "dinner"],
+  },
+  {
+    "slug": "yes-no-wheel",
+    "name": "Yes or No Wheel",
+    "title": "Yes or No Wheel — Free Random Decision Maker | Wheel Bolo",
+    "desc": "A free Yes or No wheel — spin to make a quick, unbiased decision. Perfect when you just can't choose. Add your own options too. No sign-up, works on any phone.",
+    "eyebrow": "🤔 Can't decide?",
+    "h1": "Yes or No Wheel",
+    "lead": "Stuck on a decision? Give the wheel a spin and let chance settle it — yes or no.",
+    "mode": "random",
+    "entries": ["Yes", "No"],
+    "article": '''
+        <h2>Let the wheel decide</h2>
+        <p>Some decisions are too small to agonise over and too annoying to keep debating. Should you order pizza? Go for the walk? Send the text? The Yes or No Wheel gives you a fast, fair, 50/50 answer with a satisfying spin — no overthinking required.</p>
+        <h3>When to use it</h3>
+        <ul>
+          <li><strong>Everyday dilemmas:</strong> stay in or go out, buy it or skip it, now or later.</li>
+          <li><strong>Settle a standoff:</strong> when two people can't agree, let the wheel be neutral.</li>
+          <li><strong>Games &amp; dares:</strong> add a fun rule that whatever it lands on, you have to do.</li>
+          <li><strong>Beat decision fatigue:</strong> hand the small calls to chance and save your energy.</li>
+        </ul>
+        <h3>Make it yours</h3>
+        <p>The wheel starts as a clean Yes / No, but you are not limited to two answers. Add "Maybe", "Ask again later", or any custom options to build your own decision spinner. Type one option per line and the wheel updates instantly. Your setup travels in the page link, so you can bookmark a custom wheel or share it with a friend who needs to make the same call.</p>
+        <p>It is completely free, needs no account, and runs entirely in your browser — spin as many times as you like.</p>
+''',
+    "related": ["truthdare", "prize", "dinner"],
+  },
+  {
+    "slug": "truth-or-dare-wheel",
+    "name": "Truth or Dare Wheel",
+    "title": "Truth or Dare Wheel — Free Party Game Spinner | Wheel Bolo",
+    "desc": "A free Truth or Dare wheel loaded with fun, family-friendly prompts. Spin to get a truth or a dare — great for parties, sleepovers and game nights. Add your own too.",
+    "eyebrow": "😈 Game night",
+    "h1": "Truth or Dare Wheel",
+    "lead": "Spin for a truth or a dare and let the party decide your fate — fair and random every time.",
+    "mode": "random",
+    "entries": ["Truth: share a hidden talent", "Dare: do 10 jumping jacks", "Truth: funniest memory",
+                "Dare: talk in a funny accent", "Truth: dream holiday", "Dare: sing a song chorus",
+                "Truth: childhood nickname", "Dare: show your best dance move"],
+    "article": '''
+        <h2>The classic game, now on a wheel</h2>
+        <p>Truth or Dare is a sleepover and party staple — but someone always argues about whose turn it is or what they have to do. The Truth or Dare Wheel takes over: give it a spin and it lands on a random prompt for whoever is up. No bias, no repeats of "I pick truth again", just instant fun with a confetti finish.</p>
+        <h3>How to play</h3>
+        <ul>
+          <li>Sit in a circle and decide who spins first.</li>
+          <li>Spin the wheel — do whatever truth or dare it lands on.</li>
+          <li>Pass the phone to the next player and spin again.</li>
+        </ul>
+        <h3>Build your own deck</h3>
+        <p>The wheel comes with a set of light, family-friendly prompts so you can start playing in seconds. But the best games are personalised — replace the prompts with your own inside jokes, challenges, or questions. Type one per line, mix easy and bold, and tailor it to your group, whether it is kids at a birthday, friends on a night out, or a team ice-breaker.</p>
+        <p>Everything stays in your browser and your custom prompts are saved in the page link, so you can reopen your favourite deck any time or share it with the group.</p>
+''',
+    "related": ["yesno", "birthday", "team"],
+  },
+  {
+    "slug": "team-picker-wheel",
+    "name": "Team Picker Wheel",
+    "title": "Team Picker Wheel — Random Team Generator | Wheel Bolo",
+    "desc": "A free team picker wheel — spin to split players into fair, random teams. Great for sports, PE class, gaming and group projects. Add names and deal them out. No sign-up.",
+    "eyebrow": "👥 Pick fair teams",
+    "h1": "Team Picker Wheel",
+    "lead": "Split the group into fair teams the fun way — spin to deal each player out, no captains needed.",
+    "mode": "elim",
+    "entries": ["Alex", "Sam", "Jordan", "Riya", "Noah", "Priya", "Liam", "Aanya", "Ethan", "Zara"],
+    "article": '''
+        <h2>Fair teams in seconds</h2>
+        <p>Letting two captains pick teams always leaves someone chosen last. The Team Picker Wheel makes it fair and fast: add everyone's name and spin to deal players out one at a time. With <em>Elimination</em> mode on, each name is removed once it is picked, so you move cleanly through the whole group with no repeats.</p>
+        <h3>How to use it</h3>
+        <ul>
+          <li><strong>Two teams:</strong> spin and send players alternately to Team A and Team B.</li>
+          <li><strong>Pick captains first:</strong> spin twice for captains, then deal out the rest.</li>
+          <li><strong>Random order:</strong> use it to set a batting order, turn order, or presentation order.</li>
+        </ul>
+        <h3>Great for any group</h3>
+        <p>PE teachers use it for fair sports teams, gamers use it for squads and lobbies, and managers use it for breakout groups and project teams. Type one name per line or paste your roster, and the wheel is ready. Because your list is saved in the page link, you can reuse the same group next week or share it with a co-organiser.</p>
+        <p>It is free, private, and runs entirely in your browser — reset any time to draw fresh teams.</p>
+''',
+    "related": ["giveaway", "classroom", "ipl"],
+  },
+  {
+    "slug": "prize-wheel",
+    "name": "Prize Wheel",
+    "title": "Prize Wheel — Free Spin to Win Prize Picker | Wheel Bolo",
+    "desc": "A free online prize wheel — load your rewards, offers or prizes and spin to win. Perfect for events, stalls, classrooms and promotions. Customisable and free.",
+    "eyebrow": "🎟️ Spin to win",
+    "h1": "Prize Wheel",
+    "lead": "Load your prizes, give it a spin, and watch the wheel land on a winner with confetti.",
+    "mode": "random",
+    "entries": ["Gift Card", "Free Coffee", "Movie Tickets", "10% Off", "Try Again",
+                "Free Dessert", "Mystery Box", "Bonus Spin"],
+    "article": '''
+        <h2>A prize wheel for any event</h2>
+        <p>Nothing pulls a crowd like a spinning prize wheel. Whether it is a school fair stall, a shop promotion, a trade-show booth, or a classroom treat, this free prize wheel brings the excitement without the cost of a physical wheel. Load your rewards, let people spin, and reveal the prize with a burst of confetti.</p>
+        <h3>Ways to use it</h3>
+        <ul>
+          <li><strong>Promotions:</strong> discounts, freebies, and "try again" slices to drive footfall.</li>
+          <li><strong>Events &amp; fairs:</strong> a fun, fair way to hand out prizes at a stall.</li>
+          <li><strong>Classrooms &amp; teams:</strong> reward points, treats, or privileges.</li>
+          <li><strong>Streams &amp; socials:</strong> spin live for your audience and share the result.</li>
+        </ul>
+        <h3>Set up your prizes</h3>
+        <p>Replace the sample prizes with your own — type one per line, or paste a list. Keep <em>Random pick</em> mode so every prize can be won more than once, or switch to <em>Elimination</em> if each prize is one-of-a-kind and should be removed after it is won. Your prize list is saved in the page link, so you can reopen the same wheel at your next event or share it with your team.</p>
+        <p>Free, no sign-up, and works on any screen — from a phone at a stall to a big display.</p>
+''',
+    "related": ["giveaway", "birthday", "yesno"],
+  },
+  {
+    "slug": "giveaway-wheel",
+    "name": "Giveaway Wheel",
+    "title": "Giveaway Wheel — Free Random Winner Picker | Wheel Bolo",
+    "desc": "A free giveaway wheel — paste your entrants and spin to pick a random winner, live and fair. Great for Instagram, YouTube and event giveaways. Removes each winner drawn.",
+    "eyebrow": "🎉 Pick a winner",
+    "h1": "Giveaway Wheel",
+    "lead": "Run a fair giveaway live — paste your entrants, spin, and reveal a random winner everyone can trust.",
+    "mode": "elim",
+    "entries": ["@aisha", "@rohan", "@meera", "@dev", "@sara", "@kabir", "@nisha", "@arjun"],
+    "article": '''
+        <h2>Run a giveaway people trust</h2>
+        <p>Picking a giveaway winner by hand always invites doubt. The Giveaway Wheel makes the draw transparent: paste your entrants, spin on camera, and let everyone watch the wheel land on a random winner. It is the fair, fuss-free way to run a contest on Instagram, YouTube, a livestream, or at an event.</p>
+        <h3>How to run your draw</h3>
+        <ul>
+          <li>Copy your entrant list — names, usernames, comments, or ticket numbers — and paste it in, one per line.</li>
+          <li>Spin live so your audience sees the result in real time.</li>
+          <li>Need several winners? <em>Elimination</em> mode removes each winner as they are drawn, so nobody wins twice.</li>
+          <li>Tap Share result to post the winner card, or Copy link to share the exact wheel.</li>
+        </ul>
+        <h3>Fair by design</h3>
+        <p>Every spin uses your browser's secure random generator, so each entrant has an equal chance and there is no way to rig the outcome — which is exactly what makes a public giveaway credible. Nothing is stored on a server; your entrant list lives only in your browser and the link you choose to share.</p>
+        <p>Completely free, no account, and ready in seconds.</p>
+''',
+    "related": ["prize", "team", "santa"],
+  },
+  {
+    "slug": "classroom-reward-wheel",
+    "name": "Classroom Reward Wheel",
+    "title": "Classroom Reward Wheel — Student Rewards Spinner | Wheel Bolo",
+    "desc": "A free classroom reward wheel for teachers — spin to give students fun rewards like free time, stickers or a homework pass. Customisable, no sign-up, works on the board.",
+    "eyebrow": "⭐ For teachers",
+    "h1": "Classroom Reward Wheel",
+    "lead": "Reward great work the fun way — spin the wheel and let students win a classroom treat.",
+    "mode": "random",
+    "entries": ["5 min free time", "Sticker", "Homework pass", "Line leader", "Choose the game",
+                "Teacher's helper", "Extra recess", "Class DJ", "Sit anywhere", "Show & tell"],
+    "article": '''
+        <h2>Turn rewards into a moment</h2>
+        <p>A reward feels twice as exciting when it comes from a spinning wheel. The Classroom Reward Wheel gives teachers a fun, fair way to celebrate good behaviour, effort, and achievement — project it on the board, let a student spin, and reveal their prize with confetti.</p>
+        <h3>Why teachers love it</h3>
+        <ul>
+          <li><strong>Positive reinforcement:</strong> reward effort and kindness, not just right answers.</li>
+          <li><strong>No favouritism:</strong> the wheel is random, so every reward feels fair.</li>
+          <li><strong>Low-cost incentives:</strong> most rewards are privileges, not prizes you have to buy.</li>
+          <li><strong>Whole-class fun:</strong> the spin becomes a shared celebration.</li>
+        </ul>
+        <h3>Build your reward list</h3>
+        <p>The wheel comes pre-loaded with classroom-friendly rewards like free time, a homework pass, line leader, and "choose the class game". Swap in the perks that work for your room — type one per line, or paste your own list. Keep <em>Random pick</em> so rewards can repeat, and reuse the same wheel every day, since your setup is saved right in the page link.</p>
+        <p>It is free, needs no login, and works on any classroom device or smartboard.</p>
+''',
+    "related": ["classroom", "birthday", "team"],
   },
 ]
 
@@ -519,7 +720,10 @@ write("404.html", not_found)
 
 # ------------------------------------------------------------ technical files
 PAGES = ["/", "/classroom-name-picker/", "/diwali-lucky-draw-wheel/", "/ipl-team-picker-wheel/",
-         "/dinner-decider-wheel/", "/secret-santa-picker/", "/about/", "/contact/", "/privacy-policy/"]
+         "/dinner-decider-wheel/", "/secret-santa-picker/", "/birthday-wheel-generator/",
+         "/yes-no-wheel/", "/truth-or-dare-wheel/", "/team-picker-wheel/", "/prize-wheel/",
+         "/giveaway-wheel/", "/classroom-reward-wheel/",
+         "/about/", "/contact/", "/privacy-policy/"]
 PRIORITY = {"/": "1.0"}
 today = "2026-06-23"
 urls = "\n".join(
@@ -550,14 +754,17 @@ write("ads.txt",
 # form-hijacking attacks even with the ad allowances in place.
 GOOGLE = ("https://pagead2.googlesyndication.com https://*.googlesyndication.com "
           "https://*.google.com https://*.googleadservices.com https://*.gstatic.com "
-          "https://*.doubleclick.net https://adservice.google.com https://tpc.googlesyndication.com")
+          "https://*.doubleclick.net https://adservice.google.com https://tpc.googlesyndication.com "
+          "https://*.adtrafficquality.google")
+# Google Analytics (gtag.js) hosts — script from googletagmanager, beacons to google-analytics.
+GA = "https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com"
 CSP = (
     "default-src 'self'; "
-    f"script-src 'self' 'unsafe-inline' 'unsafe-eval' {GOOGLE}; "
+    f"script-src 'self' 'unsafe-inline' 'unsafe-eval' {GOOGLE} {GA}; "
     "style-src 'self' 'unsafe-inline'; "
     "img-src 'self' data: https:; "
     "font-src 'self'; "
-    f"connect-src 'self' {GOOGLE}; "
+    f"connect-src 'self' {GOOGLE} {GA}; "
     f"frame-src {GOOGLE}; "
     "object-src 'none'; "
     "base-uri 'self'; "
