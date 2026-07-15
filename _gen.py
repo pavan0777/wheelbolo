@@ -1441,13 +1441,17 @@ GOOGLE = ("https://pagead2.googlesyndication.com https://*.googlesyndication.com
           "https://*.adtrafficquality.google")
 # Google Analytics (gtag.js) hosts — script from googletagmanager, beacons to google-analytics.
 GA = "https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com"
+# Cloudflare Web Analytics — Pages auto-injects beacon.min.js from
+# static.cloudflareinsights.com; it reports to cloudflareinsights.com/cdn-cgi/rum.
+CF_BEACON_SRC = "https://static.cloudflareinsights.com"
+CF_BEACON_CONNECT = "https://cloudflareinsights.com https://static.cloudflareinsights.com"
 CSP = (
     "default-src 'self'; "
-    f"script-src 'self' 'unsafe-inline' 'unsafe-eval' {GOOGLE} {GA}; "
+    f"script-src 'self' 'unsafe-inline' 'unsafe-eval' {GOOGLE} {GA} {CF_BEACON_SRC}; "
     "style-src 'self' 'unsafe-inline'; "
     "img-src 'self' data: https:; "
     "font-src 'self'; "
-    f"connect-src 'self' {GOOGLE} {GA}; "
+    f"connect-src 'self' {GOOGLE} {GA} {CF_BEACON_CONNECT}; "
     f"frame-src {GOOGLE}; "
     "object-src 'none'; "
     "base-uri 'self'; "
