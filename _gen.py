@@ -2,11 +2,23 @@
 """Generates Wheel Bolo template + trust pages and technical files.
 Output files are committed static HTML — there is NO runtime build step.
 Run: python _gen.py  (re-run if shared chrome changes)."""
-import os, json, html, datetime
+import os, json, html, datetime, hashlib, re
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SITE = "https://wheelbolo.com"
 ADS_CLIENT = "ca-pub-XXXXXXXXXXXXXXXX"  # <-- replace after AdSense approval
+
+# Content fingerprint for CSS/JS URLs (?v=<hash>). /assets/* is cached for a
+# year as `immutable` (see _headers), so the URL itself MUST change whenever
+# the file content changes — otherwise Cloudflare's edge and visitors' browsers
+# keep serving the old file for up to a year after a deploy.
+def _asset_ver():
+    h = hashlib.md5()
+    for p in ("assets/css/style.css", "assets/js/i18n.js", "assets/js/wheel-engine.js"):
+        with open(os.path.join(ROOT, p), "rb") as f:
+            h.update(f.read())
+    return h.hexdigest()[:10]
+ASSET_VER = _asset_ver()
 
 # ---------------------------------------------------------------- shared chrome
 def head(title, desc, canonical, *, og_type="website", og_image="/assets/img/og-default.png",
@@ -47,7 +59,7 @@ def head(title, desc, canonical, *, og_type="website", og_image="/assets/img/og-
 
   <link rel="preload" href="/assets/fonts/baloo2-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/assets/fonts/mukta-400-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="stylesheet" href="/assets/css/style.css?v={ASSET_VER}" />
 
   <!-- Google AdSense — replace {ADS_CLIENT} with your publisher ID after approval -->
   <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
@@ -81,7 +93,7 @@ HEADER = '''
   </header>
 '''
 
-FOOTER = '''
+FOOTER = f'''
   <footer class="site-footer">
     <div class="container">
       <div class="footer-brand">
@@ -112,8 +124,8 @@ FOOTER = '''
     </div>
   </footer>
 
-  <script src="/assets/js/i18n.js"></script>
-  <script src="/assets/js/wheel-engine.js"></script>
+  <script src="/assets/js/i18n.js?v={ASSET_VER}"></script>
+  <script src="/assets/js/wheel-engine.js?v={ASSET_VER}"></script>
 </body>
 </html>
 '''
@@ -1472,3 +1484,21 @@ write("_headers",
       f"  Content-Security-Policy: {CSP}\n")
 
 print("technical files done")
+
+# ---- keep the hand-written homepage's asset fingerprints in sync ----------
+# index.html is authored by hand (never regenerated), but its CSS/JS URLs must
+# carry the same ?v= fingerprint as the generated pages or the homepage would
+# keep loading stale cached assets after a deploy.
+idx_path = os.path.join(ROOT, "index.html")
+with open(idx_path, encoding="utf-8") as f:
+    idx = f.read()
+idx_new = re.sub(
+    r'(/assets/(?:css/style\.css|js/i18n\.js|js/wheel-engine\.js))(\?v=[0-9a-f]+)?',
+    lambda m: m.group(1) + "?v=" + ASSET_VER,
+    idx)
+if idx_new != idx:
+    with open(idx_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(idx_new)
+    print("synced index.html asset version ->", ASSET_VER)
+else:
+    print("index.html asset version already", ASSET_VER)
