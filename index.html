@@ -80,10 +80,15 @@
   <main id="main">
     <!-- ===================== HERO + WHEEL APP ===================== -->
     <section class="hero">
-      <div class="container">
-        <div class="app-grid">
-          <!-- Wheel -->
-          <div class="wheel-col">
+        <div class="wb-page-wrapper">
+          <!-- Left ad sidebar (styled placeholder) -->
+          <aside class="wb-ad-sidebar" aria-label="Advertisement">
+            <div class="wb-ad-slot-inner">Advertisement</div>
+          </aside>
+
+          <!-- Center: wheel tool -->
+          <div class="wb-tool-center">
+            <div class="wb-wheel-title" id="wbWheelTitle" contenteditable="true" spellcheck="false" data-placeholder="Click to name your wheel..." aria-label="Editable wheel title"></div>
             <div class="wheel-stage">
               <canvas id="wheel-canvas" class="wheel-canvas" role="img" aria-label="Spinning wheel of options"></canvas>
               <span class="wheel-pointer" aria-hidden="true">
@@ -94,52 +99,139 @@
               <button class="wheel-hub-btn" type="button" data-spin aria-label="Spin the wheel">
                 <span data-i18n="app.hubSpin">SPIN</span>
               </button>
+              <button class="wb-sound-btn wb-sound-icon" id="wbSoundBtn" type="button" aria-label="Toggle sound">🔊</button>
             </div>
             <p id="winner-banner" class="winner-banner" role="status" aria-live="polite"></p>
+            <div class="wb-action-bar">
+              <button class="btn btn-primary btn-lg" type="button" data-spin>
+                <span aria-hidden="true">🎯</span> <span data-spin-label data-i18n="app.spin">Spin the Wheel</span>
+              </button>
+              <button class="btn btn-secondary" type="button" data-share>
+                <span aria-hidden="true">📲</span> <span data-i18n="app.share">Share result</span>
+              </button>
+              <button class="btn btn-secondary" type="button" data-copy-link>
+                <span aria-hidden="true">🔗</span> <span data-i18n="app.copyLink">Copy link</span>
+              </button>
+            </div>
           </div>
 
-          <!-- Controls -->
-          <div class="controls-col">
-            <div class="panel">
-              <label class="field-label" for="entries-input" data-i18n="app.entriesLabel">Enter names or options (one per line)</label>
-              <textarea id="entries-input" class="entries-input" spellcheck="false"
-                aria-describedby="entries-meta"
-                data-i18n-attr="placeholder:app.entriesPlaceholder"
-                placeholder="Aarav&#10;Diya&#10;Kabir&#10;Myra&#10;Vihaan"></textarea>
-              <p id="entries-meta" class="entries-meta"></p>
-
-              <div class="controls-row">
-                <span class="field-label" id="mode-label" style="margin:0" data-i18n="app.mode">Mode</span>
-                <div class="segmented" role="radiogroup" aria-labelledby="mode-label">
-                  <input type="radio" name="mode" id="mode-random" value="random" checked />
-                  <label for="mode-random" data-i18n="app.modeRandom">Random pick</label>
-                  <input type="radio" name="mode" id="mode-elim" value="elim" />
-                  <label for="mode-elim" data-i18n="app.modeElim">Elimination</label>
+          <aside class="wb-right-panel" aria-label="Wheel options">
+            <div class="wb-tabs" role="tablist">
+              <button class="wb-tab-btn active" type="button" role="tab" data-tab="entries" aria-selected="true"><span aria-hidden="true">📝</span> Entries <span class="wb-entry-count-badge" id="entryCountBadge">0</span></button>
+              <button class="wb-tab-btn" type="button" role="tab" data-tab="results" aria-selected="false"><span aria-hidden="true">🏆</span> Results</button>
+              <button class="wb-tab-btn" type="button" role="tab" data-tab="customize" aria-selected="false"><span aria-hidden="true">🎨</span> Customize</button>
+            </div>
+            <div class="wb-tab-pane active" id="tab-pane-entries" role="tabpanel">
+              <div id="wbEditorSlotDesktop">
+                <div class="panel wb-editor" id="wbEditorPanel">
+                  <label class="field-label" for="entries-input" data-i18n="app.entriesLabel">Enter names or options (one per line)</label>
+                  <textarea id="entries-input" class="entries-input" spellcheck="false"
+                    aria-describedby="entries-meta"
+                    data-i18n-attr="placeholder:app.entriesPlaceholder"
+                    placeholder="Aarav&#10;Diya&#10;Kabir&#10;Myra&#10;Vihaan"></textarea>
+                  <p id="entries-meta" class="entries-meta"></p>
+                  <div class="controls-row">
+                    <span class="field-label" id="mode-label" style="margin:0" data-i18n="app.mode">Mode</span>
+                    <div class="segmented" role="radiogroup" aria-labelledby="mode-label">
+                      <input type="radio" name="mode" id="mode-random" value="random" checked />
+                      <label for="mode-random" data-i18n="app.modeRandom">Random pick</label>
+                      <input type="radio" name="mode" id="mode-elim" value="elim" />
+                      <label for="mode-elim" data-i18n="app.modeElim">Elimination</label>
+                    </div>
+                  </div>
+                  <p id="mode-hint" class="entries-meta"></p>
+                  <div class="action-row">
+                    <button class="btn btn-secondary" type="button" data-shuffle data-i18n="app.shuffle">Shuffle</button>
+                    <button class="btn btn-secondary" type="button" data-reset data-i18n="app.reset">Reset</button>
+                  </div>
                 </div>
               </div>
-              <p id="mode-hint" class="entries-meta"></p>
-
-              <div class="action-row">
-                <button class="btn btn-primary btn-lg" type="button" data-spin>
-                  <span aria-hidden="true">🎯</span> <span data-spin-label data-i18n="app.spin">Spin the Wheel</span>
-                </button>
-                <button class="btn btn-secondary" type="button" data-shuffle data-i18n="app.shuffle">Shuffle</button>
-                <button class="btn btn-secondary" type="button" data-reset data-i18n="app.reset">Reset</button>
+              <div class="wb-restore-banner" id="wbRestoreBanner">
+                <strong>Restore your entries?</strong><br />
+                You have <span id="wbRestoreCount">0</span> saved from last time.
+                <div class="wb-restore-actions">
+                  <button type="button" class="wb-restore-yes" id="wbRestoreYes">Restore</button>
+                  <button type="button" class="wb-restore-no" id="wbRestoreNo">Dismiss</button>
+                </div>
               </div>
-              <div class="action-row" style="margin-top:0.6rem">
-                <button class="btn btn-secondary" type="button" data-share>
-                  <span aria-hidden="true">📲</span> <span data-i18n="app.share">Share result</span>
-                </button>
-                <button class="btn btn-secondary" type="button" data-copy-link>
-                  <span aria-hidden="true">🔗</span> <span data-i18n="app.copyLink">Copy link</span>
-                </button>
+              <ul class="wb-entries-list" id="wbEntriesList" aria-label="Current entries"></ul>
+              <p class="wb-panel-hint">Tap × to remove a name.</p>
+            </div>
+            <div class="wb-tab-pane" id="tab-pane-results" role="tabpanel">
+              <ul class="wb-results-list" id="wbResultsList" aria-live="polite" aria-label="Spin results"></ul>
+              <p class="wb-results-empty" id="wbResultsEmpty">No spins yet. Hit Spin!</p>
+              <div class="wb-legacy-history" hidden>
+                <p id="history-empty" class="history-empty" data-i18n="history.empty">No spins yet.</p>
+                <ol id="history-list" class="history-list"></ol>
               </div>
             </div>
+            <div class="wb-tab-pane" id="tab-pane-customize" role="tabpanel">
+              <div class="wb-customize-section">
+                <span class="wb-customize-label">Wheel colours</span>
+                <div class="wb-palette-grid" id="wbPaletteGrid"></div>
+              </div>
+              <div class="wb-customize-section">
+                <span class="wb-customize-label">Background</span>
+                <div class="wb-bg-grid" id="wbBgGrid"></div>
+              </div>
+              <div class="wb-customize-section">
+                <span class="wb-customize-label">Spin duration</span>
+                <div class="wb-sound-row">
+                  <span aria-hidden="true">⏱️</span>
+                  <input type="range" class="wb-dur-slider" min="1" max="8" step="0.5" value="4" aria-label="Spin duration in seconds" />
+                  <span class="wb-dur-value">4s</span>
+                </div>
+              </div>
+              <div class="wb-customize-section">
+                <span class="wb-customize-label">Sound</span>
+                <div class="wb-sound-row">
+                  <button class="wb-sound-icon" id="wbSoundIcon" type="button" aria-label="Toggle sound">🔊</button>
+                  <input type="range" class="wb-sound-slider" id="wbSoundVolume" min="0" max="1" step="0.05" value="0.15" aria-label="Sound volume" />
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
 
-            <div class="history">
-              <h2><span aria-hidden="true">📜</span> <span data-i18n="history.title">Spin history</span></h2>
-              <p id="history-empty" class="history-empty" data-i18n="history.empty">No spins yet — your results will appear here.</p>
-              <ol id="history-list" class="history-list" aria-live="polite"></ol>
+        <div class="container">
+        <div class="wb-mobile-tabs">
+          <div class="wb-mobile-tab-bar">
+            <button class="wb-mobile-tab-btn active" type="button" data-mtab="entries"><span aria-hidden="true">📝</span> Entries <span class="wb-entry-count-badge" id="mobileEntryBadge">0</span></button>
+            <button class="wb-mobile-tab-btn" type="button" data-mtab="results"><span aria-hidden="true">🏆</span> Results</button>
+            <button class="wb-mobile-tab-btn" type="button" data-mtab="customize"><span aria-hidden="true">🎨</span> Customize</button>
+          </div>
+          <div class="wb-mobile-tab-pane active" id="mobile-pane-entries">
+            <div id="wbEditorSlotMobile"></div>
+            <ul class="wb-entries-list" id="wbEntriesListMobile" aria-label="Current entries"></ul>
+            <p class="wb-panel-hint">Tap × to remove a name.</p>
+          </div>
+          <div class="wb-mobile-tab-pane" id="mobile-pane-results">
+            <ul class="wb-results-list" id="wbResultsListMobile" aria-live="polite"></ul>
+            <p class="wb-results-empty" id="wbResultsEmptyMobile">No spins yet. Hit Spin!</p>
+          </div>
+          <div class="wb-mobile-tab-pane" id="mobile-pane-customize">
+            <div class="wb-customize-section">
+              <span class="wb-customize-label">Wheel colours</span>
+              <div class="wb-palette-grid" id="wbPaletteGridMobile"></div>
+            </div>
+            <div class="wb-customize-section">
+              <span class="wb-customize-label">Background</span>
+              <div class="wb-bg-grid" id="wbBgGridMobile"></div>
+            </div>
+            <div class="wb-customize-section">
+              <span class="wb-customize-label">Spin duration</span>
+              <div class="wb-sound-row">
+                <span aria-hidden="true">⏱️</span>
+                <input type="range" class="wb-dur-slider" min="1" max="8" step="0.5" value="4" aria-label="Spin duration in seconds" />
+                <span class="wb-dur-value">4s</span>
+              </div>
+            </div>
+            <div class="wb-customize-section">
+              <span class="wb-customize-label">Sound</span>
+              <div class="wb-sound-row">
+                <button class="wb-sound-icon" id="wbSoundIconMobile" type="button" aria-label="Toggle sound">🔊</button>
+                <input type="range" class="wb-sound-slider" id="wbSoundVolumeMobile" min="0" max="1" step="0.05" value="0.15" aria-label="Sound volume" />
+              </div>
             </div>
           </div>
         </div>
@@ -231,6 +323,56 @@
             <span class="tc-emoji" aria-hidden="true">⭐</span>
             <span class="tc-title">Classroom Reward Wheel</span>
             <p class="tc-desc">Reward students with fun classroom perks and treats.</p>
+          </a>
+          <a class="template-card" href="/antakshari-team-picker/">
+            <span class="tc-emoji" aria-hidden="true">🎵</span>
+            <span class="tc-title">Antakshari Team Picker</span>
+            <p class="tc-desc">Spin to split players into fair Antakshari teams.</p>
+          </a>
+          <a class="template-card" href="/kitty-party-wheel/">
+            <span class="tc-emoji" aria-hidden="true">🪅</span>
+            <span class="tc-title">Kitty Party Wheel</span>
+            <p class="tc-desc">Pick games, hosts and lucky-draw winners for kitty parties.</p>
+          </a>
+          <a class="template-card" href="/office-lucky-draw-wheel/">
+            <span class="tc-emoji" aria-hidden="true">🏢</span>
+            <span class="tc-title">Office Lucky Draw</span>
+            <p class="tc-desc">Run a fair office lucky draw, tambola or prize pick.</p>
+          </a>
+          <a class="template-card" href="/holi-team-picker/">
+            <span class="tc-emoji" aria-hidden="true">🌈</span>
+            <span class="tc-title">Holi Team Picker</span>
+            <p class="tc-desc">Spin to make colour teams for Holi games.</p>
+          </a>
+          <a class="template-card" href="/gully-cricket-team-picker/">
+            <span class="tc-emoji" aria-hidden="true">🏟️</span>
+            <span class="tc-title">Gully Cricket Picker</span>
+            <p class="tc-desc">Split players into fair gully cricket teams with a spin.</p>
+          </a>
+          <a class="template-card" href="/study-topic-picker/">
+            <span class="tc-emoji" aria-hidden="true">📚</span>
+            <span class="tc-title">Study Topic Picker</span>
+            <p class="tc-desc">Spin to decide which subject or chapter to study next.</p>
+          </a>
+          <a class="template-card" href="/ipl-player-picker-wheel/">
+            <span class="tc-emoji" aria-hidden="true">🏏</span>
+            <span class="tc-title">IPL Player Picker</span>
+            <p class="tc-desc">Spin for a random IPL player for fantasy or friendly debates.</p>
+          </a>
+          <a class="template-card" href="/ipl-auction-wheel/">
+            <span class="tc-emoji" aria-hidden="true">🔨</span>
+            <span class="tc-title">IPL Auction Wheel</span>
+            <p class="tc-desc">Spin to pick the next category in a mock IPL auction.</p>
+          </a>
+          <a class="template-card" href="/cricket-team-picker/">
+            <span class="tc-emoji" aria-hidden="true">🌍</span>
+            <span class="tc-title">Cricket Team Picker</span>
+            <p class="tc-desc">Spin for a random international cricket team.</p>
+          </a>
+          <a class="template-card" href="/football-team-picker/">
+            <span class="tc-emoji" aria-hidden="true">⚽</span>
+            <span class="tc-title">Football Team Picker</span>
+            <p class="tc-desc">Spin for a random football club — PL, La Liga and more.</p>
           </a>
         </div>
       </div>

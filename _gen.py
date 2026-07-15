@@ -2,7 +2,7 @@
 """Generates Wheel Bolo template + trust pages and technical files.
 Output files are committed static HTML — there is NO runtime build step.
 Run: python _gen.py  (re-run if shared chrome changes)."""
-import os, json, html
+import os, json, html, datetime
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SITE = "https://wheelbolo.com"
@@ -54,8 +54,10 @@ def head(title, desc, canonical, *, og_type="website", og_image="/assets/img/og-
   <link rel="preconnect" href="https://googleads.g.doubleclick.net" crossorigin />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADS_CLIENT}" crossorigin="anonymous"></script>''')
     if jsonld:
-        blocks.append('  <script type="application/ld+json">\n' +
-                      json.dumps(jsonld, ensure_ascii=False, indent=2) + '\n  </script>')
+        items = jsonld if isinstance(jsonld, list) else [jsonld]
+        for obj in items:
+            blocks.append('  <script type="application/ld+json">\n' +
+                          json.dumps(obj, ensure_ascii=False, indent=2) + '\n  </script>')
     if extra_head:
         blocks.append(extra_head)
     blocks.append("</head>\n<body>")
@@ -119,9 +121,13 @@ FOOTER = '''
 def app_section(eyebrow, h1, lead):
     return f'''
     <section class="hero">
-      <div class="container">
-        <div class="app-grid">
-          <div class="wheel-col">
+        <div class="wb-page-wrapper">
+          <aside class="wb-ad-sidebar" aria-label="Advertisement">
+            <div class="wb-ad-slot-inner">Advertisement</div>
+          </aside>
+
+          <div class="wb-tool-center">
+            <div class="wb-wheel-title" id="wbWheelTitle" contenteditable="true" spellcheck="false" data-placeholder="Click to name your wheel..." aria-label="Editable wheel title"></div>
             <div class="wheel-stage">
               <canvas id="wheel-canvas" class="wheel-canvas" role="img" aria-label="Spinning wheel of options"></canvas>
               <span class="wheel-pointer" aria-hidden="true">
@@ -132,51 +138,139 @@ def app_section(eyebrow, h1, lead):
               <button class="wheel-hub-btn" type="button" data-spin aria-label="Spin the wheel">
                 <span data-i18n="app.hubSpin">SPIN</span>
               </button>
+              <button class="wb-sound-btn wb-sound-icon" id="wbSoundBtn" type="button" aria-label="Toggle sound">🔊</button>
             </div>
             <p id="winner-banner" class="winner-banner" role="status" aria-live="polite"></p>
+            <div class="wb-action-bar">
+              <button class="btn btn-primary btn-lg" type="button" data-spin>
+                <span aria-hidden="true">🎯</span> <span data-spin-label data-i18n="app.spin">Spin the Wheel</span>
+              </button>
+              <button class="btn btn-secondary" type="button" data-share>
+                <span aria-hidden="true">📲</span> <span data-i18n="app.share">Share result</span>
+              </button>
+              <button class="btn btn-secondary" type="button" data-copy-link>
+                <span aria-hidden="true">🔗</span> <span data-i18n="app.copyLink">Copy link</span>
+              </button>
+            </div>
           </div>
 
-          <div class="controls-col">
-            <div class="panel">
-              <label class="field-label" for="entries-input" data-i18n="app.entriesLabel">Enter names or options (one per line)</label>
-              <textarea id="entries-input" class="entries-input" spellcheck="false"
-                aria-describedby="entries-meta"
-                data-i18n-attr="placeholder:app.entriesPlaceholder"
-                placeholder="One per line"></textarea>
-              <p id="entries-meta" class="entries-meta"></p>
-
-              <div class="controls-row">
-                <span class="field-label" id="mode-label" style="margin:0" data-i18n="app.mode">Mode</span>
-                <div class="segmented" role="radiogroup" aria-labelledby="mode-label">
-                  <input type="radio" name="mode" id="mode-random" value="random" checked />
-                  <label for="mode-random" data-i18n="app.modeRandom">Random pick</label>
-                  <input type="radio" name="mode" id="mode-elim" value="elim" />
-                  <label for="mode-elim" data-i18n="app.modeElim">Elimination</label>
+          <aside class="wb-right-panel" aria-label="Wheel options">
+            <div class="wb-tabs" role="tablist">
+              <button class="wb-tab-btn active" type="button" role="tab" data-tab="entries" aria-selected="true"><span aria-hidden="true">📝</span> Entries <span class="wb-entry-count-badge" id="entryCountBadge">0</span></button>
+              <button class="wb-tab-btn" type="button" role="tab" data-tab="results" aria-selected="false"><span aria-hidden="true">🏆</span> Results</button>
+              <button class="wb-tab-btn" type="button" role="tab" data-tab="customize" aria-selected="false"><span aria-hidden="true">🎨</span> Customize</button>
+            </div>
+            <div class="wb-tab-pane active" id="tab-pane-entries" role="tabpanel">
+              <div id="wbEditorSlotDesktop">
+                <div class="panel wb-editor" id="wbEditorPanel">
+                  <label class="field-label" for="entries-input" data-i18n="app.entriesLabel">Enter names or options (one per line)</label>
+                  <textarea id="entries-input" class="entries-input" spellcheck="false"
+                    aria-describedby="entries-meta"
+                    data-i18n-attr="placeholder:app.entriesPlaceholder"
+                    placeholder="One per line"></textarea>
+                  <p id="entries-meta" class="entries-meta"></p>
+                  <div class="controls-row">
+                    <span class="field-label" id="mode-label" style="margin:0" data-i18n="app.mode">Mode</span>
+                    <div class="segmented" role="radiogroup" aria-labelledby="mode-label">
+                      <input type="radio" name="mode" id="mode-random" value="random" checked />
+                      <label for="mode-random" data-i18n="app.modeRandom">Random pick</label>
+                      <input type="radio" name="mode" id="mode-elim" value="elim" />
+                      <label for="mode-elim" data-i18n="app.modeElim">Elimination</label>
+                    </div>
+                  </div>
+                  <p id="mode-hint" class="entries-meta"></p>
+                  <div class="action-row">
+                    <button class="btn btn-secondary" type="button" data-shuffle data-i18n="app.shuffle">Shuffle</button>
+                    <button class="btn btn-secondary" type="button" data-reset data-i18n="app.reset">Reset</button>
+                  </div>
                 </div>
               </div>
-              <p id="mode-hint" class="entries-meta"></p>
-
-              <div class="action-row">
-                <button class="btn btn-primary btn-lg" type="button" data-spin>
-                  <span aria-hidden="true">🎯</span> <span data-spin-label data-i18n="app.spin">Spin the Wheel</span>
-                </button>
-                <button class="btn btn-secondary" type="button" data-shuffle data-i18n="app.shuffle">Shuffle</button>
-                <button class="btn btn-secondary" type="button" data-reset data-i18n="app.reset">Reset</button>
+              <div class="wb-restore-banner" id="wbRestoreBanner">
+                <strong>Restore your entries?</strong><br />
+                You have <span id="wbRestoreCount">0</span> saved from last time.
+                <div class="wb-restore-actions">
+                  <button type="button" class="wb-restore-yes" id="wbRestoreYes">Restore</button>
+                  <button type="button" class="wb-restore-no" id="wbRestoreNo">Dismiss</button>
+                </div>
               </div>
-              <div class="action-row" style="margin-top:0.6rem">
-                <button class="btn btn-secondary" type="button" data-share>
-                  <span aria-hidden="true">📲</span> <span data-i18n="app.share">Share result</span>
-                </button>
-                <button class="btn btn-secondary" type="button" data-copy-link>
-                  <span aria-hidden="true">🔗</span> <span data-i18n="app.copyLink">Copy link</span>
-                </button>
+              <ul class="wb-entries-list" id="wbEntriesList" aria-label="Current entries"></ul>
+              <p class="wb-panel-hint">Tap × to remove a name.</p>
+            </div>
+            <div class="wb-tab-pane" id="tab-pane-results" role="tabpanel">
+              <ul class="wb-results-list" id="wbResultsList" aria-live="polite" aria-label="Spin results"></ul>
+              <p class="wb-results-empty" id="wbResultsEmpty">No spins yet. Hit Spin!</p>
+              <div class="wb-legacy-history" hidden>
+                <p id="history-empty" class="history-empty" data-i18n="history.empty">No spins yet.</p>
+                <ol id="history-list" class="history-list"></ol>
               </div>
             </div>
+            <div class="wb-tab-pane" id="tab-pane-customize" role="tabpanel">
+              <div class="wb-customize-section">
+                <span class="wb-customize-label">Wheel colours</span>
+                <div class="wb-palette-grid" id="wbPaletteGrid"></div>
+              </div>
+              <div class="wb-customize-section">
+                <span class="wb-customize-label">Background</span>
+                <div class="wb-bg-grid" id="wbBgGrid"></div>
+              </div>
+              <div class="wb-customize-section">
+                <span class="wb-customize-label">Spin duration</span>
+                <div class="wb-sound-row">
+                  <span aria-hidden="true">⏱️</span>
+                  <input type="range" class="wb-dur-slider" min="1" max="8" step="0.5" value="4" aria-label="Spin duration in seconds" />
+                  <span class="wb-dur-value">4s</span>
+                </div>
+              </div>
+              <div class="wb-customize-section">
+                <span class="wb-customize-label">Sound</span>
+                <div class="wb-sound-row">
+                  <button class="wb-sound-icon" id="wbSoundIcon" type="button" aria-label="Toggle sound">🔊</button>
+                  <input type="range" class="wb-sound-slider" id="wbSoundVolume" min="0" max="1" step="0.05" value="0.15" aria-label="Sound volume" />
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
 
-            <div class="history">
-              <h2><span aria-hidden="true">📜</span> <span data-i18n="history.title">Spin history</span></h2>
-              <p id="history-empty" class="history-empty" data-i18n="history.empty">No spins yet — your results will appear here.</p>
-              <ol id="history-list" class="history-list" aria-live="polite"></ol>
+        <div class="container">
+        <div class="wb-mobile-tabs">
+          <div class="wb-mobile-tab-bar">
+            <button class="wb-mobile-tab-btn active" type="button" data-mtab="entries"><span aria-hidden="true">📝</span> Entries <span class="wb-entry-count-badge" id="mobileEntryBadge">0</span></button>
+            <button class="wb-mobile-tab-btn" type="button" data-mtab="results"><span aria-hidden="true">🏆</span> Results</button>
+            <button class="wb-mobile-tab-btn" type="button" data-mtab="customize"><span aria-hidden="true">🎨</span> Customize</button>
+          </div>
+          <div class="wb-mobile-tab-pane active" id="mobile-pane-entries">
+            <div id="wbEditorSlotMobile"></div>
+            <ul class="wb-entries-list" id="wbEntriesListMobile" aria-label="Current entries"></ul>
+            <p class="wb-panel-hint">Tap × to remove a name.</p>
+          </div>
+          <div class="wb-mobile-tab-pane" id="mobile-pane-results">
+            <ul class="wb-results-list" id="wbResultsListMobile" aria-live="polite"></ul>
+            <p class="wb-results-empty" id="wbResultsEmptyMobile">No spins yet. Hit Spin!</p>
+          </div>
+          <div class="wb-mobile-tab-pane" id="mobile-pane-customize">
+            <div class="wb-customize-section">
+              <span class="wb-customize-label">Wheel colours</span>
+              <div class="wb-palette-grid" id="wbPaletteGridMobile"></div>
+            </div>
+            <div class="wb-customize-section">
+              <span class="wb-customize-label">Background</span>
+              <div class="wb-bg-grid" id="wbBgGridMobile"></div>
+            </div>
+            <div class="wb-customize-section">
+              <span class="wb-customize-label">Spin duration</span>
+              <div class="wb-sound-row">
+                <span aria-hidden="true">⏱️</span>
+                <input type="range" class="wb-dur-slider" min="1" max="8" step="0.5" value="4" aria-label="Spin duration in seconds" />
+                <span class="wb-dur-value">4s</span>
+              </div>
+            </div>
+            <div class="wb-customize-section">
+              <span class="wb-customize-label">Sound</span>
+              <div class="wb-sound-row">
+                <button class="wb-sound-icon" id="wbSoundIconMobile" type="button" aria-label="Toggle sound">🔊</button>
+                <input type="range" class="wb-sound-slider" id="wbSoundVolumeMobile" min="0" max="1" step="0.05" value="0.15" aria-label="Sound volume" />
+              </div>
             </div>
           </div>
         </div>
@@ -222,6 +316,52 @@ def breadcrumb_jsonld(name, url):
         ],
     }
 
+def webapp_jsonld(name, url, desc, category="UtilitiesApplication",
+                  currency="INR", langs=None, features=None):
+    if langs is None:
+        langs = ["en", "hi"]
+    if features is None:
+        features = [
+            "Random winner selection",
+            "Elimination mode for no-repeat picks",
+            "Hindi and English interface",
+            "Shareable result card",
+            "Works on mobile without install",
+        ]
+    return {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": name,
+        "url": url,
+        "description": desc,
+        "applicationCategory": category,
+        "operatingSystem": "All",
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": currency},
+        "inLanguage": langs,
+        "featureList": features,
+    }
+
+def faq_jsonld(qa):
+    return {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {"@type": "Question", "name": q,
+             "acceptedAnswer": {"@type": "Answer", "text": a}}
+            for q, a in qa
+        ],
+    }
+
+def faq_html(qa):
+    items = "\n".join(f'''        <details class="faq-item">
+          <summary>{html.escape(q)}</summary>
+          <div class="faq-answer"><p>{html.escape(a)}</p></div>
+        </details>''' for q, a in qa)
+    return f'''
+        <h2>Frequently asked questions</h2>
+{items}
+'''
+
 def related(cards):
     items = "\n".join(f'''          <a class="template-card" href="{href}">
             <span class="tc-emoji" aria-hidden="true">{emoji}</span>
@@ -239,6 +379,20 @@ def related(cards):
     </section>
 '''
 
+# Product-wide FAQ appended to every wheel page (covers the shared feature set).
+PRODUCT_FAQ = [
+    ("Is there a dark mode?",
+     "Yes. Tap the sun/moon button in the top bar to switch between light and dark themes. Wheel Bolo also follows your device's system preference automatically on your first visit."),
+    ("What languages does Wheel Bolo support?",
+     "The interface is available in 17 languages including Hindi, Bengali, Tamil, Telugu, Gujarati, Kannada, Malayalam, Marathi, Punjabi and Urdu. Tap the language button to switch, and type entry names in any script, including Devanagari."),
+    ("Does the wheel play a sound?",
+     "Yes. The wheel makes a soft ticking sound as it spins and a short chime when a winner is picked. Use the sound button or the volume slider in the Customize tab to adjust or mute it. Sound stays off if your device requests reduced motion."),
+    ("Can I change the wheel's colours and background?",
+     "Yes. Open the Customize tab to choose a colour palette (Pastel, Ocean, Sunset, Forest and more) and a background theme. Your choice is remembered on your device for next time."),
+    ("Can I share the result?",
+     "Yes. After the wheel stops, tap Share result to create a 1080x1080 winner image. On phones it opens the share sheet (WhatsApp, Instagram and more); on desktop it downloads. Free, with no sign-up."),
+]
+
 # ------------------------------------------------------------------- page data
 CARDS = {
   "classroom": ("🎓", "Classroom Name Picker", "Pick a student fairly for answers, turns and group work.", "/classroom-name-picker/"),
@@ -253,41 +407,79 @@ CARDS = {
   "prize":     ("🎟️", "Prize Wheel", "Spin a prize wheel for rewards and offers.", "/prize-wheel/"),
   "giveaway":  ("🎉", "Giveaway Wheel", "Pick a random giveaway winner — fair and live.", "/giveaway-wheel/"),
   "reward":    ("⭐", "Classroom Reward Wheel", "Reward students with fun classroom perks.", "/classroom-reward-wheel/"),
+  "antakshari":("🎵", "Antakshari Team Picker", "Spin to split players into fair Antakshari teams.", "/antakshari-team-picker/"),
+  "kitty":     ("🪅", "Kitty Party Wheel", "Pick games, hosts and lucky-draw winners for kitty parties.", "/kitty-party-wheel/"),
+  "office":    ("🏢", "Office Lucky Draw", "Run a fair office lucky draw, tambola or prize pick.", "/office-lucky-draw-wheel/"),
+  "holi":      ("🌈", "Holi Team Picker", "Spin to make colour teams for Holi games.", "/holi-team-picker/"),
+  "gully":     ("🏟️", "Gully Cricket Picker", "Split players into fair gully cricket teams with a spin.", "/gully-cricket-team-picker/"),
+  "study":     ("📚", "Study Topic Picker", "Spin to decide which subject or chapter to study next.", "/study-topic-picker/"),
+  "iplplayer": ("🏏", "IPL Player Picker", "Spin for a random IPL player for fantasy or friendly debates.", "/ipl-player-picker-wheel/"),
+  "iplauction":("🔨", "IPL Auction Wheel", "Spin to pick the next category in a mock IPL auction.", "/ipl-auction-wheel/"),
+  "cricket":   ("🌍", "Cricket Team Picker", "Spin for a random international cricket team.", "/cricket-team-picker/"),
+  "football":  ("⚽", "Football Team Picker", "Spin for a random football club — PL, La Liga and more.", "/football-team-picker/"),
 }
 
 TEMPLATES = [
   {
     "slug": "classroom-name-picker",
     "name": "Classroom Name Picker",
-    "title": "Classroom Name Picker — Random Student Wheel | Wheel Bolo",
-    "desc": "A free random student name picker wheel for teachers. Add your class list, spin, and call on a student fairly. Hindi & English names. No sign-up.",
-    "eyebrow": "🎓 For teachers &amp; classrooms",
-    "h1": "Classroom Name Picker",
-    "lead": "Call on students fairly. Add your class list, spin the wheel, and let chance decide who answers next.",
+    "title": "Classroom Name Picker — Free Random Student Selector for Indian Teachers | Wheel Bolo",
+    "desc": "Free classroom name picker for Indian teachers. Spin the wheel to randomly select a student for questions, turns or group work — works in Hindi and English. No sign-up needed.",
+    "app_desc": "Free random student selector for Indian teachers. Spin the wheel to pick a student fairly in Hindi or English.",
+    "app_category": "EducationApplication",
+    "features": ["Random student selection", "Elimination mode for no-repeat picks",
+                 "Hindi and English support", "WhatsApp result sharing",
+                 "Works on mobile without install"],
+    "eyebrow": "🎓 For Indian teachers",
+    "h1": "Classroom Name Picker for Indian Teachers",
+    "lead": "Call on students fairly. Add your class list, spin the wheel, and let chance decide who answers next — in Hindi or English.",
     "mode": "random",
-    "entries": ["Aarav","Diya","Kabir","Saanvi","Vihaan","Anaya","Reyansh","Ananya","Arjun",
-                "Ishita","Aditya","Myra","रिया","कबीर","आरव","दीया"],
+    "entries": ["Aarav","Priya","Rohan","Ananya","Vikas","Sneha","Arjun","Divya","Karthik","Meera"],
     "article": '''
-        <h2>A fair way to call on students</h2>
-        <p>Calling on the same few raised hands is easy — but it leaves quieter students behind. The Classroom Name Picker spins through your whole class list and lands on one name at random, so every student has an equal chance to answer, read aloud, or lead an activity. It takes the pressure off you and adds a little fun to the room.</p>
-        <h3>How teachers use it</h3>
+        <h2>How to use the classroom name picker</h2>
+        <p>The classroom name picker takes three simple steps, and it works just as well in Hindi as it does in English — type names in Devanagari (देवनागरी) or the Roman alphabet and the wheel handles both.</p>
+        <ol>
+          <li><strong>Add your student names.</strong> Type one name per line, or paste your class list straight from a register. The wheel comes pre-loaded with ten sample names so you can try it in seconds.</li>
+          <li><strong>Choose a mode.</strong> Pick <em>Random</em> to call on any student each spin, or <em>Elimination</em> so every student is picked once before anyone repeats — ideal for turn-taking.</li>
+          <li><strong>Spin and announce the winner.</strong> Tap the wheel, wait for the confetti, and read out the name it lands on. Then hand the next question to chance, not to the same raised hands.</li>
+        </ol>
+
+        <h2>When to use a random student selector</h2>
+        <p>A random name wheel is useful far beyond just asking questions. Here are six everyday moments in an Indian classroom where it keeps things fair and quick. It works for CBSE, ICSE, State Board classrooms alike — the tool does not care which syllabus you follow.</p>
         <ul>
-          <li><strong>Cold-call fairly:</strong> spin to pick who answers the next question.</li>
-          <li><strong>Assign turns:</strong> reading, presenting, or solving a problem on the board.</li>
-          <li><strong>Make groups:</strong> use elimination mode to draw students one by one into teams.</li>
-          <li><strong>Pick a helper:</strong> line leader, monitor, or attendance helper for the day.</li>
+          <li><strong>Morning assembly and prayer duty rotation.</strong> Instead of the same confident students leading prayer or the pledge every week, spin to rotate assembly duties. Over a term, everyone gets a fair turn at the mic without you having to keep a chart.</li>
+          <li><strong>Picking students to answer in-class questions.</strong> Cold-calling with a wheel removes any hint of teacher bias — the class can see the pick is random. It keeps every child alert, because anyone could be next, not just the front bench.</li>
+          <li><strong>Forming project groups fairly.</strong> Use Elimination mode to draw students one by one into balanced groups. Nobody is picked last, and there are no complaints that friends were kept together or split up on purpose.</li>
+          <li><strong>Selecting students for school competitions and elocutions.</strong> When more children volunteer than there are slots for the inter-house elocution or quiz, a spin makes the shortlist transparent and drama-free for both students and parents.</li>
+          <li><strong>Assigning blackboard duty and class monitor duty.</strong> Rotate who cleans the board, collects notebooks, or acts as monitor for the day. The wheel spreads these small responsibilities evenly across the whole class.</li>
+          <li><strong>Choosing volunteers for science experiments or drama.</strong> For a demonstration in the lab or a role in the class play, spin to pick who comes up next — every child gets a fair shot at the hands-on, exciting parts.</li>
         </ul>
-        <h3>Add your own class list</h3>
-        <p>The wheel comes pre-filled with sample names in both English and Hindi (हिंदी) so you can see how it works. Replace them with your students — type one name per line, or paste your list from a register. Switch on <em>Elimination</em> mode when you want each student picked only once, which is perfect for fair group formation or a turn order that covers everyone before repeating.</p>
-        <p>Everything runs in your browser. Nothing is saved or sent anywhere, and you can share the exact list with a colleague using the Copy link button.</p>
+
+        <h2>Why fair random selection matters in Indian classrooms</h2>
+        <p>Research in educational psychology consistently shows that <strong>random questioning improves engagement</strong>: when students know anyone can be called, more of them stay mentally prepared with an answer. It also reduces unconscious teacher bias. In many Indian classrooms, teachers tend to call on the same confident front-row students repeatedly, while children at the back or those who are shy slowly disengage. A visible, random wheel breaks that pattern — every name has an equal chance, participation spreads across the whole room, and no student feels singled out or ignored. Fair selection is not just about being nice; it measurably lifts attention and learning for the class as a whole.</p>
 ''',
-    "related": ["diwali","santa","dinner"],
+    "faq": [
+      ("Is this classroom name picker free to use?",
+       "Yes, Wheel Bolo's classroom name picker is completely free. No sign-up, no download, and no hidden charges. Open it on your phone or laptop and start using it immediately."),
+      ("Can I use this in Hindi?",
+       "Yes. Wheel Bolo supports both Hindi and English. You can type student names in Hindi (Devanagari script) and the wheel will display and pick them correctly."),
+      ("What is Elimination mode?",
+       "In Elimination mode, each student picked is removed from the wheel after their turn. This ensures every student gets a chance before anyone is picked twice — ideal for oral exams, presentations, or class activities."),
+      ("How many student names can I add?",
+       "You can add as many names as you need. The wheel automatically adjusts the size of each segment. It works well for small groups of 5 and large classes of 60+."),
+      ("Is this tool different from ClassTools?",
+       "Wheel Bolo is a free alternative to ClassTools' random name picker. It is designed specifically for Indian classrooms with Hindi language support, WhatsApp sharing, and templates for Indian school activities. No account or registration is required."),
+      ("Does it work on mobile phones?",
+       "Yes. Wheel Bolo is built mobile-first. It works on any Android or iPhone browser without installing an app. Most Indian teachers use it directly from their phone in the classroom."),
+    ],
+    "related": ["study","antakshari","dinner"],
   },
   {
     "slug": "diwali-lucky-draw-wheel",
     "name": "Diwali Lucky Draw",
-    "title": "Diwali Lucky Draw Wheel — Lucky Winner Picker | Wheel Bolo",
-    "desc": "Run a fair Diwali lucky draw online. Add names, spin the wheel, and pick a lucky winner for your Diwali party, office, or housing society. Free, no sign-up.",
+    "title": "Diwali Lucky Draw Wheel — Free Online Lucky Draw for Diwali Party | Wheel Bolo",
+    "desc": "Run a fair Diwali lucky draw online. Add participant names, spin the wheel, announce the winner. Free for office parties, housing societies and family Diwali celebrations.",
+    "app_category": "GameApplication",
     "eyebrow": "🪔 Happy Diwali",
     "h1": "Diwali Lucky Draw Wheel",
     "lead": "Pick a lucky winner the fun way. Add the names, spin, and let the festival of lights choose.",
@@ -295,25 +487,50 @@ TEMPLATES = [
     "entries": ["Priya","Rohan","Aunty ji","Sharma uncle","Neha","Vikram","Meera","Anil",
                 "Pooja","Sanjay","Kavya","Deepak"],
     "article": '''
-        <h2>The joy of a Diwali lucky draw</h2>
-        <p>No Diwali party is complete without a lucky draw. Whether it's a get-together at home, a Diwali celebration at the office, or the annual function in your housing society, the lucky draw is the moment everyone waits for. This wheel makes it effortless — add every guest's name, spin, and reveal the winner with a burst of confetti. No paper slips, no folded chits in a bowl, and no arguments about whether the draw was fair.</p>
-        <h3>How to run your draw</h3>
-        <ol>
-          <li>Type each participant's name, one per line, or paste your guest list.</li>
-          <li>Keep <em>Elimination</em> mode on so each winner is removed — ideal when you have several prizes to give away.</li>
-          <li>Spin once per prize, from the smallest gift up to the grand prize.</li>
-          <li>Tap Share result to send the winner card to your family or office WhatsApp group instantly.</li>
-        </ol>
-        <h3>Why it feels fair to everyone</h3>
-        <p>Each spin uses your browser's secure random generator, so there is genuinely no way to rig the outcome — every name has the same chance. That transparency is what makes a lucky draw fun rather than suspicious. Light the diyas, gather everyone around the phone or screen, and let Wheel Bolo pick your Diwali winners. Shubh Deepavali!</p>
+        <h2>How to run a Diwali lucky draw online</h2>
+        <p>No Diwali party is complete without a lucky draw — and this wheel replaces the bowl of folded paper chits entirely. Add every guest's name (one per line, or paste your list), keep <em>Elimination</em> mode on so each winner is removed as they are drawn, and spin once per prize from the smallest gift up to the grand prize. Each spin uses your browser's secure random generator, so there is genuinely no way to rig it — and everyone can watch the wheel land on a winner in real time. Tap Share result to send the winner card straight to your family or office WhatsApp group.</p>
+        <h2>Perfect for these Diwali celebrations</h2>
+        <ul>
+          <li><strong>Office Diwali party:</strong> draw names for gift hampers, sweets boxes or the grand prize in front of the whole team.</li>
+          <li><strong>Housing society event:</strong> run the annual society lucky draw on a projector so every flat can see it is fair.</li>
+          <li><strong>Family gathering:</strong> add cousins, uncles and aunties and let the wheel pick who wins the taash-night pot or the biggest mithai box.</li>
+          <li><strong>School Diwali mela:</strong> use it at a stall to pick raffle winners without printing tickets.</li>
+          <li><strong>Online gift exchange:</strong> spin over a video call so far-away relatives can join the celebration too.</li>
+        </ul>
+        <h2>Tips for a fair Diwali lucky draw</h2>
+        <p>Show the full list of names on the screen before you spin, so everyone can confirm they are included. Use Elimination mode when you have several prizes so nobody wins twice. Screenshot or share the winner card as a record, and share the wheel link so anyone can reopen the exact same draw and verify it. Light the diyas, gather around the phone, and let Wheel Bolo pick your winners. Shubh Deepavali!</p>
 ''',
-    "related": ["santa","classroom","ipl"],
+    "faq": [
+      ("Is the Diwali lucky draw wheel free?",
+       "Yes, it is completely free with no sign-up or download. Add your participant names and spin as many times as your celebration needs."),
+      ("How do I give away more than one Diwali prize?",
+       "Keep Elimination mode on. Each name the wheel lands on is removed after the spin, so you can draw a different winner for every prize without anyone being picked twice."),
+      ("Is the draw genuinely random and fair?",
+       "Yes. Every spin uses your browser's secure random generator, so each name has an exactly equal chance. You can show the list on screen before spinning so everyone sees it is fair."),
+      ("Can I share the winner on WhatsApp?",
+       "Yes. After the wheel stops, tap Share result to send a winner card to your family or office WhatsApp group, or Copy link to share the exact wheel."),
+    ],
+    "related": ["kitty","office","prize"],
   },
   {
     "slug": "ipl-team-picker-wheel",
     "name": "IPL Team Picker",
-    "title": "IPL Team Picker Wheel — Randomly Assign IPL Teams | Wheel Bolo",
-    "desc": "Spin to randomly assign an IPL team. All 10 teams pre-loaded — perfect for fantasy leagues, gully cricket, friendly predictions and box cricket. Free wheel.",
+    "title": "IPL Team Picker Wheel — Spin to Get a Random IPL 2026 Team | Wheel Bolo",
+    "desc": "Spin the wheel to get a random IPL team for fantasy cricket, gully cricket or friendly bets. All 10 IPL 2026 teams loaded. Free, instant, no sign-up.",
+    "app_desc": "Randomly pick an IPL team by spinning the wheel. Includes all 10 IPL 2026 teams. Perfect for fantasy cricket, gully cricket team assignment, and friendly bets.",
+    "app_category": "GameApplication",
+    "team_data": {
+      "Chennai Super Kings":         {"color": "#FDB913", "abbr": "CSK",  "textColor": "#1A1A1A"},
+      "Mumbai Indians":              {"color": "#004BA0", "abbr": "MI",   "textColor": "#FFFFFF"},
+      "Royal Challengers Bengaluru": {"color": "#D11D1D", "abbr": "RCB",  "textColor": "#FFD700"},
+      "Kolkata Knight Riders":       {"color": "#3A225D", "abbr": "KKR",  "textColor": "#FFD700"},
+      "Sunrisers Hyderabad":         {"color": "#FF6D22", "abbr": "SRH",  "textColor": "#1A1A1A"},
+      "Delhi Capitals":              {"color": "#17479E", "abbr": "DC",   "textColor": "#FFFFFF"},
+      "Punjab Kings":                {"color": "#AA4545", "abbr": "PBKS", "textColor": "#FFFFFF"},
+      "Rajasthan Royals":            {"color": "#254AA5", "abbr": "RR",   "textColor": "#FFB6D9"},
+      "Gujarat Titans":              {"color": "#1C1C1C", "abbr": "GT",   "textColor": "#D4B15A"},
+      "Lucknow Super Giants":        {"color": "#5AACE3", "abbr": "LSG",  "textColor": "#1A1A1A"},
+    },
     "eyebrow": "🏏 Cricket season",
     "h1": "IPL Team Picker Wheel",
     "lead": "Let the wheel hand you an IPL team. All 10 teams loaded and ready — spin and play.",
@@ -322,51 +539,77 @@ TEMPLATES = [
                 "Kolkata Knight Riders","Sunrisers Hyderabad","Delhi Capitals",
                 "Punjab Kings","Rajasthan Royals","Gujarat Titans","Lucknow Super Giants"],
     "article": '''
-        <h2>Pick your IPL team at random</h2>
-        <p>When friends gather for a prediction game, a fantasy draft, or a round of box cricket, the first question is always the same: who gets which team? The IPL Team Picker settles it instantly. All ten franchises are pre-loaded on the wheel — Chennai Super Kings, Mumbai Indians, Royal Challengers Bengaluru, Kolkata Knight Riders, Sunrisers Hyderabad, Delhi Capitals, Punjab Kings, Rajasthan Royals, Gujarat Titans and Lucknow Super Giants — so you just spin and go.</p>
-        <h3>Great for</h3>
+        <h2>How to use the IPL team picker</h2>
+        <ol>
+          <li><strong>Open the page.</strong> All ten IPL 2026 teams are already loaded on the wheel, so there is nothing to set up.</li>
+          <li><strong>Spin.</strong> Tap the wheel and it lands on a random team — that is your team for the match, the draft, or the bet.</li>
+          <li><strong>Share on WhatsApp.</strong> Hit Share result to send the team card to your group, or Copy link to share the exact wheel with friends.</li>
+        </ol>
+        <h2>Uses for the IPL team picker wheel</h2>
         <ul>
-          <li><strong>Fantasy &amp; prediction leagues:</strong> assign each player a team to support for the season.</li>
-          <li><strong>Gully &amp; box cricket:</strong> decide which side each captain represents.</li>
-          <li><strong>Watch-party games:</strong> everyone backs the team the wheel gives them.</li>
-          <li><strong>Friendly bets:</strong> a neutral, unbiased way to draw teams.</li>
+          <li><strong>Office IPL pool:</strong> assign each colleague a team to follow for the season and track who tops the table.</li>
+          <li><strong>Fantasy league draft:</strong> deal out teams fairly when several friends are drafting.</li>
+          <li><strong>Gully cricket team assignment:</strong> decide which franchise each side plays as in your mohalla match.</li>
+          <li><strong>Settling debates:</strong> end the "which team do I support today?" argument with a neutral spin.</li>
         </ul>
-        <h3>Each team only once</h3>
-        <p>This wheel uses <em>Elimination</em> mode by default, so once a team is picked it is removed — letting you deal out all ten teams to your group without repeats. Want to keep picking from the full list instead? Switch to <em>Random pick</em> mode. You can also edit the list to use just your favourite teams, or add player names for a captain draft.</p>
+        <h2>IPL 2026 teams on the wheel</h2>
+        <ul>
+          <li><strong>Chennai Super Kings</strong> — Chennai, home at the M. A. Chidambaram Stadium; the "Yellow Army".</li>
+          <li><strong>Mumbai Indians</strong> — Mumbai, home at the Wankhede Stadium; the "Paltan".</li>
+          <li><strong>Royal Challengers Bengaluru</strong> — Bengaluru, home at the M. Chinnaswamy Stadium; "RCB".</li>
+          <li><strong>Kolkata Knight Riders</strong> — Kolkata, home at Eden Gardens; "KKR".</li>
+          <li><strong>Delhi Capitals</strong> — Delhi, home at the Arun Jaitley Stadium; "DC".</li>
+          <li><strong>Punjab Kings</strong> — Mohali/Punjab, home at the PCA Stadium; "PBKS".</li>
+          <li><strong>Rajasthan Royals</strong> — Jaipur, home at the Sawai Mansingh Stadium; "RR".</li>
+          <li><strong>Sunrisers Hyderabad</strong> — Hyderabad, home at the Rajiv Gandhi Stadium; "SRH".</li>
+          <li><strong>Lucknow Super Giants</strong> — Lucknow, home at the Ekana Stadium; "LSG".</li>
+          <li><strong>Gujarat Titans</strong> — Ahmedabad, home at the Narendra Modi Stadium; "GT".</li>
+        </ul>
 ''',
-    "related": ["dinner","classroom","santa"],
+    "faq": [
+      ("Which IPL teams are on the wheel?",
+       "All 10 IPL 2026 teams are included: Mumbai Indians, Chennai Super Kings, Royal Challengers Bengaluru, Kolkata Knight Riders, Delhi Capitals, Punjab Kings, Rajasthan Royals, Sunrisers Hyderabad, Lucknow Super Giants, and Gujarat Titans."),
+      ("Can I remove my own team from the wheel?",
+       "Yes. Edit the list and delete your team name before spinning. The wheel will redistribute evenly among the remaining teams."),
+      ("Is this useful for IPL fantasy league team selection?",
+       "Yes. Many fantasy cricket players use the IPL team picker to randomly decide which team to support each match, or to assign rival teams in office leagues and friendly competitions."),
+      ("Can I share my result on WhatsApp?",
+       "Yes. After the wheel stops, tap the Share Result button to send the winner directly to WhatsApp — including the team name and a fun caption."),
+      ("Does the wheel remember which teams were picked?",
+       "Switch to Elimination mode to automatically remove each picked team after every spin. This is useful when assigning different IPL teams to multiple people in a group."),
+    ],
+    "related": ["gully","study","antakshari"],
   },
   {
     "slug": "dinner-decider-wheel",
     "name": "Dinner Decider",
-    "title": "What's for Dinner? — Indian Food Decision Wheel | Wheel Bolo",
-    "desc": "Can't decide what to cook or order? Spin the dinner decider wheel loaded with Indian food favourites and let it choose tonight's meal. Free and fun.",
+    "title": "Dinner Decider Wheel — Spin to Pick What to Eat Tonight | Wheel Bolo",
+    "desc": "Can't decide what to make for dinner? Spin the Indian dinner decider wheel. Includes dal-rice, roti-sabzi, biryani, pasta and more. Add your own options too.",
     "eyebrow": "🍛 What's cooking tonight?",
     "h1": "What's for Dinner? Decision Wheel",
     "lead": "End the daily 'kya banaye?' debate. Spin the wheel of Indian favourites and let dinner decide itself.",
     "mode": "random",
-    "entries": ["Biryani","Masala Dosa","Paneer Butter Masala","Chole Bhature","Rajma Chawal",
-                "Pav Bhaji","Maggi","Idli Sambhar","Khichdi","Veg Pulao","Roti Sabzi","Pasta",
-                "Order out 🛵"],
+    "entries": ["Dal Chawal","Roti Sabzi","Biryani","Rajma Chawal","Chole Bhature","Khichdi",
+                "Pasta","Maggi","Paneer","Order In"],
     "article": '''
         <h2>Never argue about dinner again</h2>
-        <p>"Aaj khaane mein kya banaye?" is the question that stumps every household, every single evening. The Dinner Decider takes the decision off your plate. The wheel comes loaded with everyday Indian favourites — from biryani and masala dosa to rajma chawal, pav bhaji and the ever-reliable Maggi — plus a cheeky "Order out" slice for the nights you just can't be bothered.</p>
+        <p>"Aaj khaane mein kya banaye?" is the question that stumps every household, every single evening. The Dinner Decider takes the decision off your plate. The wheel comes loaded with everyday Indian favourites — from dal chawal and roti sabzi to rajma chawal, chole bhature, biryani and the ever-reliable Maggi — plus a "Paneer" night for guests and an "Order In" slice for when you just can't be bothered to cook.</p>
         <h3>How to use it</h3>
         <ol>
-          <li>Spin as-is for a quick decision, or edit the list to match what's in your kitchen.</li>
+          <li>Spin as-is for a quick decision, or edit the list to match what's in your kitchen today.</li>
           <li>Add family favourites, leftovers to finish, or restaurants you like to order from.</li>
           <li>Spin — and commit to whatever the wheel lands on. No re-rolls!</li>
         </ol>
         <h3>Make it your own</h3>
-        <p>Cooking for the week? Add seven options and use it to plan a different meal each day. Running a tiffin service or a small kitchen? Use it to surprise customers with a dish of the day. Because your list is saved right in the page link, you can bookmark your personalised dinner wheel or share it with the family cook in one tap. Simple, fast, and a little bit fun — exactly what a tired evening needs.</p>
+        <p>Cooking for the week? Add seven options and use it to plan a different meal each day. Running a tiffin service or a small home kitchen? Use it to surprise customers with a dish of the day. Because your list is saved right in the page link, you can bookmark your personalised dinner wheel or share it with the family cook in one tap. Simple, fast, and a little bit fun — exactly what a tired evening needs.</p>
 ''',
-    "related": ["ipl","classroom","diwali"],
+    "related": ["study","kitty","santa"],
   },
   {
     "slug": "secret-santa-picker",
     "name": "Secret Santa Picker",
-    "title": "Secret Santa Picker — Free Gift Exchange Wheel | Wheel Bolo",
-    "desc": "Run a fair Secret Santa or gift exchange draw online. Add names, spin, and pick who gives to whom — no paper chits needed. Free, private, no sign-up.",
+    "title": "Secret Santa Picker — Free Online Name Draw for Gift Exchange | Wheel Bolo",
+    "desc": "Draw names for Secret Santa online. Add your group, spin the wheel, share results on WhatsApp. Free Secret Santa name picker for office and family gift exchanges in India.",
     "eyebrow": "🎁 Gift exchange",
     "h1": "Secret Santa Name Picker",
     "lead": "Draw names for your gift exchange without folded chits. Spin, reveal, and keep it fair.",
@@ -384,7 +627,7 @@ TEMPLATES = [
         <h3>Perfect for the whole season</h3>
         <p>Whether it's a Christmas Secret Santa at the office, a New Year gift exchange with friends, or a birthday game, this wheel handles any group draw. It works equally well for picking who goes first in a party game, who hosts next, or who does the washing up. Nothing is stored, so when the draw is done, it's done — reset and start a fresh one any time.</p>
 ''',
-    "related": ["diwali","classroom","dinner"],
+    "related": ["office","prize","diwali"],
   },
   {
     "slug": "birthday-wheel-generator",
@@ -495,29 +738,40 @@ TEMPLATES = [
   {
     "slug": "prize-wheel",
     "name": "Prize Wheel",
-    "title": "Prize Wheel — Free Spin to Win Prize Picker | Wheel Bolo",
-    "desc": "A free online prize wheel — load your rewards, offers or prizes and spin to win. Perfect for events, stalls, classrooms and promotions. Customisable and free.",
+    "title": "Prize Wheel Spinner — Free Online Lucky Draw Prize Picker | Wheel Bolo",
+    "desc": "Free online prize wheel spinner. Add your prizes, spin the wheel, announce the winner. Perfect for giveaways, school fairs, office events and social media contests.",
+    "app_category": "GameApplication",
     "eyebrow": "🎟️ Spin to win",
     "h1": "Prize Wheel",
     "lead": "Load your prizes, give it a spin, and watch the wheel land on a winner with confetti.",
     "mode": "random",
-    "entries": ["Gift Card", "Free Coffee", "Movie Tickets", "10% Off", "Try Again",
-                "Free Dessert", "Mystery Box", "Bonus Spin"],
+    "entries": ["iPhone", "Amazon Gift Card", "Hamper", "Discount Voucher", "Free Product",
+                "₹500 Cash", "Mystery Prize", "Try Again"],
     "article": '''
-        <h2>A prize wheel for any event</h2>
-        <p>Nothing pulls a crowd like a spinning prize wheel. Whether it is a school fair stall, a shop promotion, a trade-show booth, or a classroom treat, this free prize wheel brings the excitement without the cost of a physical wheel. Load your rewards, let people spin, and reveal the prize with a burst of confetti.</p>
-        <h3>Ways to use it</h3>
+        <h2>How to set up your prize wheel</h2>
+        <p>Nothing pulls a crowd like a spinning prize wheel, and this one takes seconds to set up. The wheel arrives loaded with sample prizes — an iPhone, an Amazon gift card, a hamper, a mystery prize and a cheeky "Try Again" — so you can see exactly how it works. Replace them with your own rewards by typing one prize per line, or paste a list you already have. Keep <em>Random pick</em> mode so a prize can be won more than once, or switch to <em>Elimination</em> when each prize is one-of-a-kind and should be removed after it is won. Spin, and the winner appears with a burst of confetti.</p>
+        <h2>Best uses for an online prize wheel</h2>
         <ul>
-          <li><strong>Promotions:</strong> discounts, freebies, and "try again" slices to drive footfall.</li>
-          <li><strong>Events &amp; fairs:</strong> a fun, fair way to hand out prizes at a stall.</li>
-          <li><strong>Classrooms &amp; teams:</strong> reward points, treats, or privileges.</li>
-          <li><strong>Streams &amp; socials:</strong> spin live for your audience and share the result.</li>
+          <li><strong>Giveaways:</strong> spin live on Instagram or YouTube so your audience sees the winning prize chosen fairly.</li>
+          <li><strong>School prize distribution:</strong> run a fun, transparent draw at the annual day or a class party.</li>
+          <li><strong>Social media contests:</strong> reward comments and shares by spinning for the prize each winner gets.</li>
+          <li><strong>Event raffles:</strong> replace paper raffle tickets at a fair, mela or trade-show stall.</li>
+          <li><strong>Office reward programs:</strong> spin for spot bonuses, vouchers or perks at team meetings.</li>
         </ul>
-        <h3>Set up your prizes</h3>
-        <p>Replace the sample prizes with your own — type one per line, or paste a list. Keep <em>Random pick</em> mode so every prize can be won more than once, or switch to <em>Elimination</em> if each prize is one-of-a-kind and should be removed after it is won. Your prize list is saved in the page link, so you can reopen the same wheel at your next event or share it with your team.</p>
-        <p>Free, no sign-up, and works on any screen — from a phone at a stall to a big display.</p>
+        <h2>Tips to make your prize draw exciting</h2>
+        <p>Build suspense by spinning from the smallest prize up to the grand prize. Add a "Try Again" or "Bonus Spin" slice so not every spin wins — it makes the wins feel bigger. Show the wheel on a big screen or projector so everyone can watch, and read the prize out loud before revealing the winner. Because your prize list is saved right in the page link, you can bookmark your wheel, reopen the exact same one at your next event, or share it with your team so everyone has the same prizes ready. It is free, needs no sign-up, and works on any screen — from a phone at a stall to a large display.</p>
 ''',
-    "related": ["giveaway", "birthday", "yesno"],
+    "faq": [
+      ("Is the prize wheel free to use?",
+       "Yes, the prize wheel is completely free with no sign-up or download. Add your prizes and spin as many times as your event needs."),
+      ("Can I add my own prizes?",
+       "Absolutely. Replace the sample prizes by typing one prize per line, or paste your own list. The wheel automatically resizes each segment to fit."),
+      ("How do I make sure each prize is only won once?",
+       "Switch to Elimination mode. Each prize the wheel lands on is removed after the spin, so every prize is awarded exactly once — ideal for one-of-a-kind rewards."),
+      ("Can I use the prize wheel for an Instagram or YouTube giveaway?",
+       "Yes. Spin it live on screen during your stream or story so your audience can watch the prize being chosen fairly, then tap Share result to post the outcome."),
+    ],
+    "related": ["office","diwali","kitty"],
   },
   {
     "slug": "giveaway-wheel",
@@ -572,6 +826,390 @@ TEMPLATES = [
 ''',
     "related": ["classroom", "birthday", "team"],
   },
+  {
+    "slug": "antakshari-team-picker",
+    "name": "Antakshari Team Picker",
+    "title": "Antakshari Team Picker — Spin the Wheel to Make Teams | Wheel Bolo",
+    "desc": "Make Antakshari teams fairly with a spin of the wheel. Free online Antakshari team picker — add player names, spin, divide into teams. Works on mobile, share on WhatsApp.",
+    "app_category": "GameApplication",
+    "eyebrow": "🎵 Game night",
+    "h1": "Antakshari Team Picker",
+    "lead": "Divide players into fair Antakshari teams the fun way — add names, spin, and let the wheel settle the sides.",
+    "mode": "elim",
+    "entries": ["Team 1", "Team 2", "Team 3", "Team 4"],
+    "article": '''
+        <h2>How to divide Antakshari teams with the wheel</h2>
+        <ol>
+          <li><strong>Add all player names to the wheel</strong> — type one name per line, replacing the sample teams.</li>
+          <li><strong>Spin.</strong> Whoever the wheel lands on is assigned to Team 1 (note their name down).</li>
+          <li><strong>Switch to Elimination mode</strong> and keep spinning to assign the rest — each player is removed once picked, so you deal everyone out alternately into Team 1 and Team 2.</li>
+          <li><strong>Share the final teams on WhatsApp</strong> so everyone can see who is singing with whom.</li>
+        </ol>
+        <h2>Why Antakshari teams need to be random</h2>
+        <p>Everyone knows the one cousin who remembers a thousand songs. When teams are picked by hand, the argument always starts before the singing does — one side ends up with all the strong singers and the game feels rigged before the first "aa" is sung. A random wheel takes the captaincy politics out of it entirely. Nobody can stack a team, nobody is picked last, and the sides come out balanced by pure chance. It keeps the mood light and the focus where it belongs: on the antakshari itself.</p>
+        <h2>Antakshari team picker for these occasions</h2>
+        <p>Antakshari is the classic Indian ice-breaker, and this wheel fits every setting. At <strong>family gatherings</strong> and festival get-togethers, it splits the young and old into fair mixed teams in seconds. At <strong>kitty parties</strong>, it decides sides without anyone feeling left out. During <strong>college fests</strong> and <strong>dorm nights</strong>, it settles large, noisy groups quickly so the round can start. On a <strong>road trip</strong>, one person's phone becomes the referee for a car-full of singers. And at an <strong>office party</strong> or team outing, it mixes departments into teams that would never have grouped themselves — exactly the kind of fun, fair split that gets everyone singing together.</p>
+''',
+    "faq": [
+      ("What is this Antakshari team picker?",
+       "It is a free online spin wheel that divides players into fair Antakshari teams. Add everyone's names, spin, and the wheel assigns players to teams at random — no captains, no arguments."),
+      ("Can I make more than 2 teams?",
+       "Yes. You can assign players into as many teams as you like — just keep spinning in Elimination mode and place each picked player into the next team in rotation (Team 1, Team 2, Team 3, and so on)."),
+      ("How do I make equal teams?",
+       "Turn on Elimination mode and deal players out alternately — first pick to Team 1, next to Team 2, and repeat. Because each name is removed after it is picked, the teams end up equal in size."),
+      ("Can I share teams on WhatsApp?",
+       "Yes. Once you have assigned everyone, tap Share result to send a card to your group, or Copy link to share the exact wheel so others can see it was fair."),
+      ("Does it work for other team games like Dumb Charades?",
+       "Absolutely. The same wheel works for Dumb Charades, Housie teams, quiz sides, or any party game where you need to split people into fair groups."),
+    ],
+    "related": ["kitty","gully","holi"],
+  },
+  {
+    "slug": "kitty-party-wheel",
+    "name": "Kitty Party Wheel",
+    "title": "Kitty Party Game Wheel — Fun Online Games for Kitty Party | Wheel Bolo",
+    "desc": "Make your kitty party more fun with the spin wheel. Randomly pick games, decide the host order, run lucky draws and play kitty party activities — free, mobile-friendly.",
+    "app_category": "GameApplication",
+    "eyebrow": "🪅 Kitty party fun",
+    "h1": "Kitty Party Spin Wheel",
+    "lead": "Pick the next game, decide the host, or draw a lucky winner — one spin keeps your kitty party moving.",
+    "mode": "random",
+    "entries": ["Tambola", "Antakshari", "Dumb Charades", "Housie", "Dance Performance",
+                "Mehendi Competition", "Cooking Challenge", "Fashion Show", "Quiz", "Kitty Game"],
+    "article": '''
+        <h2>How to use the kitty party wheel</h2>
+        <p>The wheel comes pre-loaded with the most popular kitty party games, so you can start in seconds. Spin to pick the next activity, or edit the list — type one game, name or prize per line — to build a wheel for your own group. Keep <em>Random pick</em> to let a game come up more than once, or switch to <em>Elimination</em> when you want each game or each hostess picked only once. Every spin ends with a confetti reveal, and you can Share result or Copy link to send the outcome to your kitty WhatsApp group.</p>
+        <h2>Kitty party games you can run with the spin wheel</h2>
+        <ul>
+          <li><strong>Decide which game to play:</strong> spin the loaded list of Tambola, Antakshari, Dumb Charades, Housie and more instead of debating it.</li>
+          <li><strong>Pick the host order for next month:</strong> add every member's name and spin to fairly decide who hosts the next kitty.</li>
+          <li><strong>Run a lucky draw for the kitty prize:</strong> add all names and spin in Elimination mode to draw the pot winner transparently.</li>
+          <li><strong>Assign teams for competitions:</strong> split members into sides for the dance, cooking or fashion round.</li>
+        </ul>
+        <h2>Kitty party lucky draw ideas</h2>
+        <p>A spin wheel makes every prize moment feel special. Run a <strong>gift hamper lucky draw</strong> where each member's name goes on the wheel and one lucky winner takes home the hamper. Use it to <strong>pick the jewellery or best-dressed contest winner</strong> when the votes are close and you want a neutral tie-breaker. Spin to choose the <strong>best-dressed winner</strong> from a shortlist, or to fairly <strong>decide who brings what</strong> — snacks, sweets, the return gifts — for the next party. Because nothing is stored and every spin is genuinely random, no one can accuse the hostess of playing favourites.</p>
+''',
+    "faq": [
+      ("Is the kitty party wheel free?",
+       "Yes, it is completely free with no sign-up or app to download. Open it on your phone and start spinning at your next kitty party."),
+      ("Can I add my own games or member names?",
+       "Yes. Replace the pre-loaded games by typing one game, name or prize per line, or paste a list. The wheel resizes each segment automatically."),
+      ("How do I run a fair kitty lucky draw?",
+       "Add every member's name and switch to Elimination mode. Each spin removes the name it lands on, so you can draw one or more winners without anyone being picked twice."),
+      ("Can I decide who hosts the next kitty with it?",
+       "Yes. Add all the members' names and spin — whoever the wheel lands on hosts next month. It is a fair, neutral way to settle the host rotation."),
+      ("Can I share the result with my kitty group?",
+       "Yes. Tap Share result to send a winner card to your WhatsApp group, or Copy link to share the exact wheel so everyone can see it was fair."),
+    ],
+    "related": ["antakshari","diwali","prize"],
+  },
+  {
+    "slug": "office-lucky-draw-wheel",
+    "name": "Office Lucky Draw",
+    "title": "Office Lucky Draw Wheel — Free Online Tambola & Prize Draw for Office | Wheel Bolo",
+    "desc": "Run a fair office lucky draw with a spin of the wheel. Free online tool for office parties, Diwali gifting, tambola, team rewards and farewell gifts. No app download needed.",
+    "app_category": "GameApplication",
+    "eyebrow": "🏢 For the workplace",
+    "h1": "Office Lucky Draw Wheel",
+    "lead": "Run a transparent office lucky draw on the big screen — add names, spin, and reveal the winner for all to see.",
+    "mode": "random",
+    "entries": ["Employee 1", "Employee 2", "Employee 3"],
+    "article": '''
+        <h2>How to run an office lucky draw online</h2>
+        <ol>
+          <li><strong>Add all eligible employee names</strong> — type one name per line, or paste the list from your team roster.</li>
+          <li><strong>Spin the wheel live</strong> on a shared screen or projector so the whole office can watch it land.</li>
+          <li><strong>Announce the winner</strong> and tap Share result to post the winner card to the company WhatsApp or Teams group.</li>
+        </ol>
+        <h2>Office occasions that need a lucky draw</h2>
+        <ul>
+          <li><strong>Diwali office party prize:</strong> draw for hampers and gift vouchers so the festive prizes are handed out fairly in front of everyone.</li>
+          <li><strong>Employee of the Month (fun category):</strong> spin for light-hearted awards like "best chai break" or "most helpful desk neighbour".</li>
+          <li><strong>Farewell gift draw:</strong> decide who gives the farewell speech or which team member picks the going-away gift.</li>
+          <li><strong>Team outing activity:</strong> pick who plans the next outing, or draw for the window seat on the bus.</li>
+          <li><strong>Anniversary celebration:</strong> run a work-anniversary raffle where long-serving employees go into a prize draw.</li>
+          <li><strong>Secret Santa gift assignment:</strong> spin to assign who gives to whom without paper chits or peeking.</li>
+          <li><strong>Work-from-home survival kit giveaway:</strong> draw remote employees for a care package or gadget.</li>
+          <li><strong>Quarterly reward draw:</strong> put everyone who hit their targets into a fair spin for a bonus prize.</li>
+        </ul>
+        <h2>Tips for a transparent office lucky draw</h2>
+        <p>Show the full list of names on the screen to everyone before spinning, so people can confirm they are included. Use Elimination mode when there are multiple prizes, so each winner is removed and nobody wins twice. Screenshot the final result as a record for HR, and share the wheel link so anyone who missed the event can reopen the exact same draw and verify it was fair. Because the pick uses your browser's secure random generator, there is no way to rig it — which is exactly what makes an office draw feel trustworthy.</p>
+''',
+    "faq": [
+      ("Can I use this for a tambola number pick?",
+       "Yes. Add the numbers or tickets you want to draw from, one per line, and spin. In Elimination mode each number is removed after it is called, just like a tambola draw."),
+      ("How do I run a multi-prize lucky draw?",
+       "Turn on Elimination mode. Each name the wheel lands on is removed after the spin, so you can draw a different winner for every prize without anyone being picked twice."),
+      ("Can I project this on a TV or screen in the office?",
+       "Yes. Open the wheel in any browser and share your screen or connect to a projector. The wheel and confetti scale up cleanly for a big display."),
+      ("Is it truly random?",
+       "Yes. Every spin uses your browser's secure random number generator, so each name has an exactly equal chance. Showing the list before you spin makes the fairness visible to everyone."),
+      ("Can I add emojis or prize names to the wheel?",
+       "Yes. You can type prize names, emojis or employee names — anything you like, one per line. The wheel adjusts each segment to fit."),
+    ],
+    "related": ["diwali","prize","santa"],
+  },
+  {
+    "slug": "holi-team-picker",
+    "name": "Holi Team Picker",
+    "title": "Holi Team Picker Wheel — Spin to Make Holi Colour Teams | Wheel Bolo",
+    "desc": "Make Holi colour teams with a spin of the wheel. Free Holi team picker for housing societies, schools and office Holi events. Pick teams by colour — red, blue, green, yellow.",
+    "app_category": "GameApplication",
+    "eyebrow": "🌈 Happy Holi",
+    "h1": "Holi Team Picker",
+    "lead": "Split the crowd into colour teams the fun way — spin to sort everyone into red, blue, green and more.",
+    "mode": "random",
+    "entries": ["Red Team", "Blue Team", "Green Team", "Yellow Team", "Pink Team", "Orange Team"],
+    "article": '''
+        <h2>How to make Holi teams with the spin wheel</h2>
+        <p>The wheel comes loaded with six colour teams, so you are ready to play in seconds. To sort players, have each person spin once — the colour it lands on is their team. Or add every player's name to the wheel, switch to <em>Elimination</em> mode, and deal names out into each colour team in turn so the sides come out equal. Either way, the split is random and nobody can complain that the teams were stacked. Spin, get your colour, and grab your gulaal.</p>
+        <h2>Holi game ideas that need team picking</h2>
+        <ul>
+          <li><strong>Rang panchami colour battle:</strong> two or more colour teams face off to cover the other side in their shade.</li>
+          <li><strong>Water gun (pichkari) teams:</strong> divide the kids into squads for a friendly water fight.</li>
+          <li><strong>Holi trivia quiz teams:</strong> sort guests into sides for a festival quiz between the snacks and thandai.</li>
+          <li><strong>Tug of war at the society Holi:</strong> spin to build two even teams for the classic rope pull.</li>
+          <li><strong>Colour powder relay race:</strong> assign relay teams and race to carry the gulaal to the finish.</li>
+        </ul>
+        <h2>Running a Holi lucky draw</h2>
+        <p>Housing societies often pair the Holi celebration with a prize draw for the best-dressed, the best rangoli, or a simple raffle. Add every resident's name to the wheel and spin to pick winners fairly in front of the whole society — no folded chits, no doubts. For a full festive prize draw with multiple gifts, the <a href="/diwali-lucky-draw-wheel/">Diwali Lucky Draw Wheel</a> works exactly the same way and is handy any time of year.</p>
+''',
+    "faq": [
+      ("Is the Holi team picker free?",
+       "Yes, it is completely free with no sign-up or download. Open it on any phone and start making colour teams straight away."),
+      ("Can I change the colour team names?",
+       "Yes. Edit the list to add, remove or rename teams — type one team per line. You can also add player names instead of colours if you prefer."),
+      ("How do I make equal Holi teams?",
+       "Add all the players' names, switch to Elimination mode, and deal them out into each colour team in rotation. Because each name is removed after it is picked, the teams end up equal."),
+      ("Can I use it for a housing society Holi event?",
+       "Yes. It is ideal for societies and schools — spin on a phone or a big screen so every resident or student can see the teams and any lucky-draw winners are chosen fairly."),
+    ],
+    "related": ["gully","antakshari","kitty"],
+  },
+  {
+    "slug": "gully-cricket-team-picker",
+    "name": "Gully Cricket Team Picker",
+    "title": "Gully Cricket Team Picker — Spin the Wheel to Pick Cricket Teams | Wheel Bolo",
+    "desc": "Pick gully cricket teams fairly with a spin of the wheel. Free random cricket team selector — add player names, spin to assign teams. Perfect for mohalla cricket, box cricket and tape ball matches.",
+    "app_category": "GameApplication",
+    "eyebrow": "🏏 Mohalla cricket",
+    "h1": "Gully Cricket Team Picker",
+    "lead": "Split the players into fair sides before the first over — spin the wheel and let it pick the teams.",
+    "mode": "elim",
+    "entries": ["Team India", "Team Pakistan", "Team Australia", "Team England",
+                "Team South Africa", "Team Sri Lanka", "Team New Zealand",
+                "Team West Indies", "Team Bangladesh", "Team Afghanistan"],
+    "article": '''
+        <h2>How to pick gully cricket teams with the wheel</h2>
+        <p><strong>Method A — Country assignment:</strong> keep the pre-loaded country names on the wheel. Each person spins once, and the country it lands on is the side they play as. In Elimination mode each country is removed as it is taken, so no two players get the same one.</p>
+        <p><strong>Method B — Player split:</strong> clear the list and add all the players' names instead. Spin in Elimination mode and alternate the picks between Team A and Team B until everyone is assigned. Because each name is removed after it is picked, the two teams come out even and nobody is left standing awkwardly at the end.</p>
+        <h2>Types of cricket where this helps</h2>
+        <ul>
+          <li><strong>Mohalla cricket:</strong> settle the neighbourhood match sides in seconds so the game starts before it gets dark.</li>
+          <li><strong>Box cricket tournaments:</strong> assign players to franchises or split a large group into balanced box-cricket squads.</li>
+          <li><strong>Tape ball cricket:</strong> pick fair teams for the fast, high-scoring tape ball format everyone loves.</li>
+          <li><strong>Terrace cricket:</strong> divide the cousins and kids into two sides for a Sunday terrace game.</li>
+          <li><strong>Corporate cricket days:</strong> mix departments into random teams so it is not just one team against another.</li>
+          <li><strong>College cricket festivals:</strong> draw sides quickly when many players turn up and captains cannot agree.</li>
+        </ul>
+        <h2>Toss the coin vs spin the wheel</h2>
+        <p>A coin toss only answers one question — who bats first. It cannot split eight or ten players into two fair teams. Picking sides by hand with two captains always leaves someone chosen last and someone grumbling that the teams are lopsided. Spinning a wheel with everyone's names on it is more fun and more transparent: every player watches their own spin, the split is genuinely random, and there is no captain bias to argue about. When a big group needs to be divided fairly and fast, the wheel beats the coin every time.</p>
+''',
+    "faq": [
+      ("How do I split 12 players into 2 equal teams?",
+       "Add all 12 names to the wheel and turn on Elimination mode. Spin and send picks alternately to Team A and Team B. Each name is removed after it is picked, so you end up with two teams of six."),
+      ("Can I add substitute players to the wheel?",
+       "Yes. Add substitutes as extra names, or keep a separate spin for them. You can edit the list any time — just type one name per line."),
+      ("Can I use this for box cricket team assignment?",
+       "Yes. It works for box cricket, tape ball, terrace and mohalla cricket alike. Add the players or franchise names and spin to assign teams fairly."),
+      ("How do I pick batting and fielding order with this?",
+       "Add the players' names and spin in Elimination mode. The order in which names come out becomes your batting or bowling order, with no repeats."),
+      ("Can I save the teams and share on WhatsApp?",
+       "Yes. Tap Share result to send a card to your group, or Copy link to share the exact wheel so everyone can see how the teams were picked."),
+    ],
+    "related": ["ipl","antakshari","holi"],
+  },
+  {
+    "slug": "study-topic-picker",
+    "name": "Study Topic Picker",
+    "title": "Study Topic Picker Wheel — Spin to Decide What to Study | Wheel Bolo",
+    "desc": "Can't decide what subject to study today? Spin the wheel to pick your study topic. Free random study planner for JEE, NEET, board exams and college students. Works on mobile.",
+    "app_category": "EducationApplication",
+    "eyebrow": "📚 Study smarter",
+    "h1": "Study Topic Picker Wheel",
+    "lead": "Stop debating what to study and just spin. The wheel picks your next subject so you can start now.",
+    "mode": "random",
+    "entries": ["Physics", "Chemistry", "Maths", "Biology", "English", "History",
+                "Geography", "Economics", "Revision", "Break Time 😄"],
+    "article": '''
+        <h2>How to use the study topic picker</h2>
+        <p>Add your subjects or chapters to the wheel — type one per line, replacing the samples — and spin to decide what to study first. The wheel removes all the "which subject should I do now?" indecision: you study what it lands on, not just what you feel like. Keep <em>Random pick</em> to let any subject come up, or switch to <em>Elimination</em> mode to go through every subject in a random order without repeating, so nothing gets skipped. There is no bias and no favourite-subject procrastination — the wheel decides, and you get to work.</p>
+        <h2>Who uses the study topic picker</h2>
+        <ul>
+          <li><strong>JEE and NEET aspirants</strong> who have to cover Physics, Chemistry, Maths or Biology every single day and need a fair way to rotate them.</li>
+          <li><strong>Class 10 and 12 students</strong> preparing for board exams across many subjects at once.</li>
+          <li><strong>College students</strong> juggling multiple papers, assignments and revision.</li>
+          <li><strong>Students who procrastinate</strong> by debating what to study — the spin makes the choice for them in one second.</li>
+        </ul>
+        <h2>Study planning tips with the spin wheel</h2>
+        <p>Gamify your timetable by spinning for <strong>45-minute Pomodoro subject blocks</strong> — study whatever comes up, take a short break, then spin again. Use the wheel to pick <strong>which past-year paper</strong> to solve when you cannot decide. Add <strong>Revision</strong>, <strong>Break</strong> and small <strong>rewards</strong> to the wheel too, so rest is built into the plan and not just an afterthought. And when you want guaranteed full coverage before an exam, use <strong>Elimination mode</strong> so every subject is picked exactly once before any repeats — a simple way to make sure no topic is left behind.</p>
+''',
+    "faq": [
+      ("Is this really helpful for exam preparation?",
+       "Yes. Rotating subjects at random keeps your study balanced and stops you from over-studying favourites while ignoring weaker areas. It also removes the decision fatigue of choosing what to study, so you start sooner."),
+      ("Can I add chapters instead of full subjects?",
+       "Absolutely. Type individual chapters or topics — one per line — instead of whole subjects, and spin to pick exactly what to study next."),
+      ("How do I make sure I cover all topics?",
+       "Use Elimination mode. Each topic the wheel lands on is removed after it is picked, so you cycle through every subject or chapter once before any of them repeat."),
+      ("Can I add a \"Take a Break\" slice to the wheel?",
+       "Yes. Add Break, Revision or reward slices to the wheel so rest is part of the plan. Landing on a break is a fair, earned pause between study blocks."),
+      ("Is this useful for UPSC preparation?",
+       "Yes. UPSC aspirants juggle many subjects — History, Geography, Polity, Economics, current affairs and optionals. Add them all and spin to rotate your daily coverage without bias."),
+    ],
+    "related": ["classroom","dinner"],
+  },
+  {
+    "slug": "ipl-player-picker-wheel",
+    "name": "IPL Player Picker",
+    "title": "IPL Player Picker Wheel — Random IPL Player Selector | Wheel Bolo",
+    "desc": "Spin the wheel to pick a random IPL player. Top batters, bowlers and all-rounders from IPL 2026 loaded. Free, instant, no sign-up — great for fantasy cricket.",
+    "app_category": "GameApplication",
+    "eyebrow": "🏏 Cricket season",
+    "h1": "IPL Player Picker Wheel",
+    "lead": "Can't decide which IPL star to back today? Spin the wheel and let it pick your player.",
+    "mode": "random",
+    "entries": ["Rohit Sharma","Virat Kohli","Jasprit Bumrah","KL Rahul","Suryakumar Yadav",
+                "Hardik Pandya","Rishabh Pant","Ravindra Jadeja","Shubman Gill","Mohammed Shami",
+                "Yuzvendra Chahal","Jos Buttler"],
+    "article": '''
+        <h2>How to use the IPL player picker</h2>
+        <ol>
+          <li><strong>Open the page.</strong> Twelve marquee IPL players are already on the wheel — no setup needed.</li>
+          <li><strong>Spin.</strong> The wheel lands on a random player — that is your pick for the fantasy slot, the debate, or the trivia round.</li>
+          <li><strong>Edit the list</strong> to add your own squad, then Copy link to share the exact wheel with friends.</li>
+        </ol>
+        <h2>Best uses for a random IPL player selector</h2>
+        <ul>
+          <li><strong>Fantasy cricket team building:</strong> spin to fill a slot when two players are too close to call.</li>
+          <li><strong>Who to captain today:</strong> let the wheel choose your captain or vice-captain pick.</li>
+          <li><strong>Settle debates:</strong> "best batter in the league?" — put the names on and let chance referee.</li>
+          <li><strong>IPL trivia games:</strong> spin to pick which player a question is about.</li>
+        </ul>
+        <h2>About the players on the wheel</h2>
+        <p>The wheel is pre-loaded with twelve of the biggest names across the IPL 2026 season — a mix of explosive top-order batters, death-over specialists, wily spinners and match-winning all-rounders. It is only a starting point: clear the list and add your own team's full squad, a shortlist of uncapped youngsters, or the players in your fantasy draft pool. The wheel resizes each segment automatically however many names you add.</p>
+        <h2>More cricket tools on Wheel Bolo</h2>
+        <p>Need a team instead of a player? Use the <a href="/ipl-team-picker-wheel/">IPL Team Picker</a> to assign one of all ten franchises, or the <a href="/gully-cricket-team-picker/">Gully Cricket Team Picker</a> to split your mohalla match into fair sides.</p>
+''',
+    "faq": [
+      ("Which players are on the IPL player wheel?",
+       "It comes loaded with twelve marquee IPL 2026 players across batting, bowling and all-rounder roles. You can edit the list freely to add any players or your full fantasy pool."),
+      ("Can I add my own players?",
+       "Yes. Clear the list and type your own player names, one per line, or paste a squad. The wheel adjusts each segment automatically."),
+      ("Is this good for fantasy cricket?",
+       "Yes. Fantasy players use it to break ties between similar picks, choose a captain, or randomise selections across a draft pool."),
+    ],
+    "related": ["ipl","gully","cricket"],
+  },
+  {
+    "slug": "ipl-auction-wheel",
+    "name": "IPL Auction Wheel",
+    "title": "IPL Auction Wheel — Spin for IPL Player Auction Fun | Wheel Bolo",
+    "desc": "Run a mock IPL auction with the spin wheel. Spin to decide which player category to bid on next. Free online IPL auction game for friends and fantasy leagues.",
+    "app_category": "GameApplication",
+    "eyebrow": "🏏 Cricket season",
+    "h1": "IPL Auction Spin Wheel",
+    "lead": "Host your own mini IPL auction — spin to decide the next player category up for bidding.",
+    "mode": "random",
+    "entries": ["Top-Order Batter","Fast Bowler","Spinner","All-Rounder","Wicketkeeper",
+                "Overseas Player","Uncapped Talent","Finisher","Opening Pacer","Death Bowler"],
+    "article": '''
+        <h2>How to play the IPL auction wheel game</h2>
+        <p>Turn a get-together into your own mini-IPL auction. Give each player (or team) an equal purse of pretend crores. Take turns spinning the wheel — the category it lands on is the type of player up for auction in that round. Everyone bids from their purse, and the highest bidder wins a player of that category for their squad. Keep going until purses run dry or every squad is full, then compare the teams you have built.</p>
+        <h2>Use it for fantasy cricket draft order</h2>
+        <p>Running a fantasy league draft? Spin the wheel to decide which position each manager must draft next, so nobody stacks all the batters early. It keeps the draft balanced and adds a bit of suspense to every pick.</p>
+        <h2>IPL 2026 auction categories explained</h2>
+        <ul>
+          <li><strong>Top-Order Batter &amp; Finisher:</strong> the run-scorers who set up or close out an innings.</li>
+          <li><strong>Fast Bowler, Opening Pacer &amp; Death Bowler:</strong> pace for the new ball and the final overs.</li>
+          <li><strong>Spinner &amp; All-Rounder:</strong> the middle-overs controllers and the two-in-one match winners.</li>
+          <li><strong>Wicketkeeper, Overseas Player &amp; Uncapped Talent:</strong> the specialists and wildcards every squad needs.</li>
+        </ul>
+        <p>Edit the list to match the exact categories or player names in your auction — the wheel is yours to customise.</p>
+''',
+    "faq": [
+      ("How do I run a mock IPL auction with this?",
+       "Give each participant an equal budget, take turns spinning for the next player category, and let the highest bidder win a player of that type. Continue until squads are full."),
+      ("Can I change the auction categories?",
+       "Yes. Edit the list to add real player names, set roles, or price brackets — type one per line and the wheel updates instantly."),
+    ],
+    "related": ["ipl","iplplayer","prize"],
+  },
+  {
+    "slug": "cricket-team-picker",
+    "name": "Cricket Team Picker",
+    "title": "Cricket Team Picker Wheel — Random International Cricket Team | Wheel Bolo",
+    "desc": "Spin the wheel for a random international cricket team. 12 ICC nations loaded — perfect for World Cup sweepstakes, gully cricket and trivia. Free, no sign-up.",
+    "app_category": "GameApplication",
+    "eyebrow": "🏏 Cricket",
+    "h1": "Cricket Team Picker Wheel",
+    "lead": "Which cricket nation will you back? Spin the wheel to draw a team.",
+    "mode": "random",
+    "entries": ["India","Australia","England","Pakistan","South Africa","New Zealand",
+                "West Indies","Sri Lanka","Bangladesh","Afghanistan","Zimbabwe","Ireland"],
+    "article": '''
+        <h2>How to use the cricket team picker</h2>
+        <p>The wheel comes loaded with twelve international cricket nations. Spin once to draw a random team, or have each person in your group spin in turn to get the country they will support or play as. Edit the list any time — remove the minnows, add associate nations, or swap in club sides instead.</p>
+        <h2>Perfect for ICC World Cup sweepstakes</h2>
+        <p>Running an office or family sweepstake for the T20 World Cup, the ODI World Cup or the Champions Trophy? The cricket team picker draws teams fairly and in full view, so nobody can claim the office favourite was rigged. Spin in Elimination mode to hand every participant a different nation with no repeats.</p>
+        <h2>Other cricket uses</h2>
+        <ul>
+          <li><strong>Gully &amp; backyard cricket:</strong> each side plays as the country the wheel gives them.</li>
+          <li><strong>Watch-party games:</strong> back the team you draw for the match and see who ends up on the winning side.</li>
+          <li><strong>Cricket trivia:</strong> spin to pick which nation the next question is about.</li>
+        </ul>
+        <p>For the franchise game, try the <a href="/ipl-team-picker-wheel/">IPL Team Picker</a>; to split real players into sides, use the <a href="/gully-cricket-team-picker/">Gully Cricket Team Picker</a>.</p>
+''',
+    "faq": [
+      ("Which teams are on the cricket wheel?",
+       "Twelve international nations are loaded: India, Australia, England, Pakistan, South Africa, New Zealand, West Indies, Sri Lanka, Bangladesh, Afghanistan, Zimbabwe and Ireland. Edit the list to add or remove any."),
+      ("How do I run a World Cup sweepstake?",
+       "Add every participant's nation options, switch to Elimination mode, and spin once per person so each gets a different team with no repeats."),
+    ],
+    "related": ["ipl","gully","football"],
+  },
+  {
+    "slug": "football-team-picker",
+    "name": "Football Team Picker",
+    "title": "Football Team Picker Wheel — Random Football Club Selector | Wheel Bolo",
+    "desc": "Spin the wheel for a random football team. Top Premier League, La Liga and Champions League clubs loaded. Free football team randomizer for fantasy drafts and sweepstakes.",
+    "app_category": "GameApplication",
+    "eyebrow": "⚽ Football",
+    "h1": "Football Team Picker Wheel",
+    "lead": "Pick a football club at random — spin for fantasy drafts, sweepstakes and match-night fun.",
+    "mode": "random",
+    "entries": ["Manchester City","Arsenal","Liverpool","Chelsea","Manchester United","Real Madrid",
+                "Barcelona","Bayern Munich","PSG","Juventus","Borussia Dortmund","Atletico Madrid"],
+    "article": '''
+        <h2>How to use the football team picker</h2>
+        <p>The wheel is loaded with twelve of Europe's biggest clubs. Spin to draw a random team for a game, a sweepstake, or a friendly bet — or have each person spin in turn to get the club they will manage or support. Edit the list to use just your league, your five-a-side sides, or the ISL clubs from back home.</p>
+        <h2>Great for Premier League fantasy drafts</h2>
+        <p>Settle your fantasy football draft order with a spin, decide who supports which club for the weekend, or pick who hosts the next match-night. Because every spin is random and visible, there is no arguing about favouritism.</p>
+        <h2>World Cup and Champions League uses</h2>
+        <ul>
+          <li><strong>World Cup sweepstakes:</strong> add the qualifying nations and spin to assign each person a country.</li>
+          <li><strong>Champions League group draws:</strong> use it for a fun mock group-stage draw with friends.</li>
+          <li><strong>Five-a-side team picks:</strong> add the players and split them into fair sides.</li>
+        </ul>
+        <p>Prefer cricket? Try the <a href="/cricket-team-picker/">Cricket Team Picker</a> or the <a href="/ipl-team-picker-wheel/">IPL Team Picker</a>. To split a specific group of players into teams, use the <a href="/team-picker-wheel/">Team Picker Wheel</a>.</p>
+''',
+    "faq": [
+      ("Which clubs are on the football wheel?",
+       "Twelve top European clubs across the Premier League, La Liga, Bundesliga, Serie A and Ligue 1. You can edit the list to add your own league or local teams."),
+      ("Can I use it for a World Cup sweepstake?",
+       "Yes. Replace the clubs with the competing nations, switch to Elimination mode, and spin once per person so everyone gets a different country."),
+    ],
+    "related": ["cricket","ipl","team"],
+  },
 ]
 
 def write(path, content):
@@ -586,17 +1224,29 @@ for tpl in TEMPLATES:
     url = f"{SITE}/{tpl['slug']}/"
     cfg = "window.SPIN_CONFIG = " + json.dumps({"entries": tpl["entries"], "mode": tpl["mode"]}, ensure_ascii=False) + ";"
     extra = f'  <script>{cfg}</script>'
+    if tpl.get("team_data"):
+        td = "window.WB_TEAM_DATA = " + json.dumps(tpl["team_data"], ensure_ascii=False) + ";"
+        extra += f'\n  <script>{td}</script>'
     rel_cards = [CARDS[k] for k in tpl["related"]]
+    jl = [
+        breadcrumb_jsonld(tpl["name"], url),
+        webapp_jsonld(tpl["name"] + " — Wheel Bolo", url, tpl.get("app_desc", tpl["desc"]),
+                      category=tpl.get("app_category", "UtilitiesApplication"),
+                      features=tpl.get("features")),
+    ]
+    faq = list(tpl.get("faq") or []) + PRODUCT_FAQ
+    jl.append(faq_jsonld(faq))
+    body_html = tpl["article"] + faq_html(faq)
     page = (
         head(tpl["title"], tpl["desc"], url, og_type="website",
-             jsonld=breadcrumb_jsonld(tpl["name"], url), extra_head=extra)
+             jsonld=jl, extra_head=extra)
         + HEADER
         + breadcrumbs(tpl["name"])
         + '\n  <main id="main">'
         + app_section(tpl["eyebrow"], tpl["h1"], tpl["lead"])
         + AD_SLOT
         + '\n    <section class="section">\n      <article class="container prose">'
-        + tpl["article"]
+        + body_html
         + '      </article>\n    </section>'
         + related(rel_cards)
         + '\n  </main>'
@@ -663,14 +1313,14 @@ simple_page(
     "Wheel Bolo's privacy policy: how we use cookies, Google AdSense and third-party advertising, and why your wheel data never leaves your browser.",
     f'''
         <h1>Privacy Policy</h1>
-        <p><em>Last updated: 23 June 2026.</em></p>
+        <p><em>Last updated: 9 July 2026.</em></p>
         <p>Wheel Bolo ("we", "us") respects your privacy. This policy explains what information is and is not collected when you use <a href="/">wheelbolo.com</a>.</p>
 
         <h2>Your wheel data stays with you</h2>
         <p>The names and options you type into the wheel are processed entirely in your own browser. We do <strong>not</strong> have a server database and we never receive, store, or transmit your lists. The only way your data leaves your device is if <em>you</em> choose to share it — using the Copy link button (which encodes your list into the page URL) or the Share result button (which creates an image on your device).</p>
 
         <h2>Cookies and local storage</h2>
-        <p>The core tool does not require cookies or local storage to function. However, the third-party advertising described below may set cookies in your browser.</p>
+        <p>To make the tool more convenient, Wheel Bolo saves a small amount of information in your browser's <strong>local storage</strong> — only on your own device. This includes the list of names or options you last entered (so it can be offered back to you if you return to the same wheel), and your preferences: the wheel title you type, your chosen colour palette, background theme, and sound volume. This data is stored <strong>only in your browser</strong>. It is never sent to us or to any server, is not used to identify or track you, and you can clear it at any time from your browser settings. The tool works fully even if local storage is disabled. Separately, the third-party advertising described below may set its own cookies in your browser.</p>
 
         <h2>Advertising &amp; Google AdSense</h2>
         <p>Wheel Bolo is free and is supported by advertising. We use <strong>Google AdSense</strong> to display ads. Third-party vendors, including Google, use cookies to serve ads based on your prior visits to this and other websites.</p>
@@ -723,12 +1373,45 @@ PAGES = ["/", "/classroom-name-picker/", "/diwali-lucky-draw-wheel/", "/ipl-team
          "/dinner-decider-wheel/", "/secret-santa-picker/", "/birthday-wheel-generator/",
          "/yes-no-wheel/", "/truth-or-dare-wheel/", "/team-picker-wheel/", "/prize-wheel/",
          "/giveaway-wheel/", "/classroom-reward-wheel/",
+         "/antakshari-team-picker/", "/kitty-party-wheel/", "/office-lucky-draw-wheel/",
+         "/holi-team-picker/", "/gully-cricket-team-picker/", "/study-topic-picker/",
+         "/ipl-player-picker-wheel/", "/ipl-auction-wheel/", "/cricket-team-picker/",
+         "/football-team-picker/",
          "/about/", "/contact/", "/privacy-policy/"]
-PRIORITY = {"/": "1.0"}
-today = "2026-06-23"
+PRIORITY = {
+    "/": "1.0",
+    "/ipl-team-picker-wheel/": "0.9",
+    "/classroom-name-picker/": "0.9",
+    "/ipl-player-picker-wheel/": "0.8",
+    "/ipl-auction-wheel/": "0.8",
+    "/cricket-team-picker/": "0.8",
+    "/football-team-picker/": "0.8",
+    "/gully-cricket-team-picker/": "0.8",
+    "/antakshari-team-picker/": "0.8",
+    "/office-lucky-draw-wheel/": "0.8",
+    "/kitty-party-wheel/": "0.8",
+    "/holi-team-picker/": "0.8",
+    "/study-topic-picker/": "0.7",
+    "/diwali-lucky-draw-wheel/": "0.7",
+    "/dinner-decider-wheel/": "0.7",
+    "/secret-santa-picker/": "0.6",
+    "/prize-wheel/": "0.7",
+    "/about/": "0.3",
+    "/contact/": "0.3",
+    "/privacy-policy/": "0.2",
+}
+CHANGEFREQ = {
+    "/": "weekly",
+    "/diwali-lucky-draw-wheel/": "yearly",
+    "/secret-santa-picker/": "yearly",
+    "/about/": "yearly",
+    "/contact/": "yearly",
+    "/privacy-policy/": "yearly",
+}
+today = datetime.date.today().isoformat()
 urls = "\n".join(
     f"  <url>\n    <loc>{SITE}{p}</loc>\n    <lastmod>{today}</lastmod>\n"
-    f"    <changefreq>{'weekly' if p in ('/',) else 'monthly'}</changefreq>\n"
+    f"    <changefreq>{CHANGEFREQ.get(p, 'monthly')}</changefreq>\n"
     f"    <priority>{PRIORITY.get(p, '0.8')}</priority>\n  </url>"
     for p in PAGES)
 write("sitemap.xml",

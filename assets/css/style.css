@@ -426,6 +426,24 @@ img, canvas { max-width: 100%; height: auto; display: block; }
 .prose li { margin-bottom: 0.4rem; }
 .prose a { text-decoration: underline; }
 
+.faq-item {
+  border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
+  margin: 0.6rem 0; overflow: hidden;
+}
+.faq-item summary {
+  cursor: pointer; list-style: none; padding: 0.9rem 2.4rem 0.9rem 1rem;
+  font-weight: 600; position: relative;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after {
+  content: "+"; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+  font-size: 1.3rem; line-height: 1; color: var(--c-marigold);
+}
+.faq-item[open] summary::after { content: "\2212"; }
+.faq-item summary:hover { background: var(--surface-2); }
+.faq-answer { padding: 0 1rem 1rem; color: var(--text-soft); }
+.faq-answer p { margin: 0; }
+
 .related-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-top: 1rem; }
 
 .breadcrumbs { font-size: 0.9rem; color: var(--text-soft); padding: 1rem 0 0; }
@@ -559,3 +577,211 @@ img, canvas { max-width: 100%; height: auto; display: block; }
 }
 :root[data-theme='dark'] .wp-name { color: var(--c-saffron); }
 .winner-pop-actions { display: flex; gap: 0.6rem; justify-content: center; padding: 0 1.4rem 1.5rem; }
+
+/* ═══════════════════════════════════════════════════════════════
+   3-PANEL TOOL LAYOUT (ad sidebar / center wheel / right tab panel)
+   Spec token names remapped to Wheel Bolo's real design tokens.
+═══════════════════════════════════════════════════════════════ */
+.wb-page-wrapper {
+  display: flex; align-items: flex-start; gap: clamp(0.75rem, 1.5vw, 1.25rem);
+  width: 100%; max-width: none; margin: 0; padding: 0; box-sizing: border-box;
+  position: relative; z-index: 1;
+}
+
+/* LEFT AD SIDEBAR (styled placeholder — no live ad unit yet). Flush to the
+   left screen edge: no wrapper padding, radius only on the inner side. */
+.wb-ad-sidebar { display: none; flex: 0 0 20%; min-width: 0; position: sticky; top: calc(var(--header-h) + 0.75rem); }
+.wb-ad-slot-inner {
+  width: 100%; min-height: 600px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-2); border-radius: 0 var(--radius) var(--radius) 0;
+  border: 1px dashed var(--border); border-left: 0;
+  font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-soft); text-align: center;
+}
+@media (min-width: 1280px) { .wb-ad-sidebar { display: block; } }
+
+/* CENTER TOOL COLUMN (~45% between the 20% ad and 34% panel) */
+.wb-tool-center { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+.wb-tool-center .winner-banner { width: 100%; max-width: 560px; }
+
+/* Compact result actions under the wheel */
+.wb-action-bar {
+  display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center;
+  margin-top: 0.75rem; width: 100%; max-width: 560px;
+}
+
+/* RIGHT PANEL — a small inset from the right edge keeps it from feeling cramped
+   (the ad sidebar stays fully flush left by design) */
+.wb-right-panel {
+  display: none; flex: 0 0 34%; min-width: 0;
+  position: sticky; top: calc(var(--header-h) + 0.75rem);
+  max-height: calc(100vh - var(--header-h) - 1.5rem);
+  margin-right: clamp(0.5rem, 1vw, 1rem);
+  background: var(--surface); border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  overflow: hidden; flex-direction: column;
+}
+@media (min-width: 1024px) { .wb-right-panel { display: flex; } }
+/* Two-column band (no ad sidebar): give the panel a bit more room */
+@media (min-width: 1024px) and (max-width: 1279.98px) { .wb-right-panel { flex-basis: 38%; } }
+
+/* TABS */
+.wb-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface-2); flex-shrink: 0; }
+.wb-tab-btn {
+  flex: 1; padding: 0.7rem 0.25rem; font-size: 0.8rem; font-weight: 600; font-family: var(--font-body);
+  background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-soft);
+  cursor: pointer; transition: color 0.15s, border-color 0.15s; white-space: nowrap;
+  display: flex; align-items: center; justify-content: center; gap: 0.3rem;
+}
+.wb-tab-btn.active { color: var(--c-marigold); border-bottom-color: var(--c-marigold); }
+.wb-tab-btn:hover:not(.active) { color: var(--text); }
+.wb-tab-pane { display: none; flex-direction: column; overflow-y: auto; flex: 1; padding: 1rem 1.1rem 1.25rem; }
+.wb-tab-pane.active { display: flex; }
+
+/* ENTRY COUNT BADGE */
+.wb-entry-count-badge {
+  font-size: 0.68rem; font-weight: 700; background: var(--c-marigold); color: #fff;
+  border-radius: 99px; padding: 0.05rem 0.45rem; min-width: 1.1rem; text-align: center;
+}
+
+/* ENTRIES LIST */
+.wb-entries-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.wb-entry-item {
+  display: flex; align-items: center; gap: 0.45rem; background: var(--surface-2);
+  border-radius: 8px; padding: 0.35rem 0.5rem; font-size: 0.85rem; font-family: var(--font-body);
+}
+.wb-entry-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.wb-entry-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.wb-entry-del { background: none; border: none; color: var(--text-soft); cursor: pointer; font-size: 1rem; line-height: 1; padding: 0 3px; flex-shrink: 0; }
+.wb-entry-del:hover { color: var(--c-magenta); }
+.wb-panel-hint { font-size: 0.75rem; color: var(--text-soft); margin: 0.6rem 0 0; }
+
+/* RESTORE BANNER */
+.wb-restore-banner {
+  background: var(--surface-2); border: 1px solid var(--c-marigold); border-radius: 8px;
+  padding: 0.55rem 0.65rem; font-size: 0.8rem; margin-bottom: 0.6rem; display: none; color: var(--text);
+}
+.wb-restore-banner.visible { display: block; }
+.wb-restore-banner strong { color: var(--c-marigold); }
+.wb-restore-actions { display: flex; gap: 0.4rem; margin-top: 0.4rem; }
+.wb-restore-actions button { font-size: 0.75rem; padding: 0.25rem 0.65rem; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); font-family: var(--font-body); }
+.wb-restore-yes { background: var(--c-marigold); color: #fff; border-color: transparent !important; }
+.wb-restore-no { background: transparent; color: var(--text-soft); }
+
+/* RESULTS LIST */
+.wb-results-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.wb-result-item { display: flex; align-items: center; gap: 0.5rem; background: var(--surface-2); border-radius: 8px; padding: 0.4rem 0.6rem; font-size: 0.85rem; font-family: var(--font-body); }
+.wb-result-item.winner .wb-result-label { font-weight: 700; color: var(--text); }
+.wb-result-item.eliminated .wb-result-label { text-decoration: line-through; color: var(--text-soft); }
+.wb-result-icon { font-size: 1rem; flex-shrink: 0; }
+.wb-result-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wb-result-time { font-size: 0.7rem; color: var(--text-soft); flex-shrink: 0; }
+.wb-results-empty { font-size: 0.85rem; color: var(--text-soft); text-align: center; padding: 1.5rem 0; }
+
+/* CUSTOMIZE TAB */
+.wb-customize-section { margin-bottom: 1.1rem; }
+.wb-customize-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-soft); margin-bottom: 0.45rem; display: block; }
+.wb-palette-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.45rem; }
+.wb-palette-btn { border-radius: 8px; padding: 0.4rem 0.3rem; border: 2px solid transparent; cursor: pointer; font-size: 0.72rem; font-family: var(--font-body); font-weight: 600; text-align: center; transition: border-color 0.15s; overflow: hidden; background: var(--surface-2); color: var(--text); }
+.wb-palette-btn.active { border-color: var(--c-marigold); }
+.wb-palette-swatch { display: flex; gap: 2px; margin-bottom: 4px; justify-content: center; flex-wrap: nowrap; }
+.wb-swatch-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.wb-bg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.45rem; }
+.wb-bg-btn { height: 44px; border-radius: 8px; border: 2px solid transparent; cursor: pointer; font-size: 0.7rem; font-weight: 600; transition: border-color 0.15s; display: flex; align-items: center; justify-content: center; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.55); font-family: var(--font-body); }
+.wb-bg-btn.active { border-color: var(--c-marigold); box-shadow: 0 0 0 2px var(--surface); }
+
+/* SOUND / DURATION ROWS */
+.wb-sound-row { display: flex; align-items: center; gap: 0.6rem; background: var(--surface-2); border-radius: 8px; padding: 0.5rem 0.65rem; }
+.wb-sound-icon { font-size: 1.1rem; cursor: pointer; flex-shrink: 0; background: none; border: none; }
+.wb-sound-slider, .wb-dur-slider { flex: 1; min-width: 0; accent-color: var(--c-marigold); cursor: pointer; }
+.wb-dur-value {
+  flex-shrink: 0; min-width: 2.6em; text-align: right;
+  font-size: 0.8rem; font-weight: 700; color: var(--text-soft); font-variant-numeric: tabular-nums;
+}
+
+/* MOBILE TABS (below wheel, <1024px) */
+.wb-mobile-tabs { display: block; margin-top: 1.5rem; }
+@media (min-width: 1024px) { .wb-mobile-tabs { display: none; } }
+.wb-mobile-tab-bar { display: flex; border-bottom: 1px solid var(--border); }
+.wb-mobile-tab-btn { flex: 1; padding: 0.65rem 0.5rem; font-size: 0.82rem; font-weight: 600; font-family: var(--font-body); background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-soft); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem; }
+.wb-mobile-tab-btn.active { color: var(--c-marigold); border-bottom-color: var(--c-marigold); }
+.wb-mobile-tab-pane { display: none; padding: 0.85rem 0; }
+.wb-mobile-tab-pane.active { display: block; }
+
+/* EDITABLE WHEEL TITLE */
+.wb-wheel-title {
+  font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--text);
+  text-align: center; margin: 0 auto 0.6rem; padding: 0.25rem 0.6rem; border-radius: 8px;
+  border: 1.5px solid transparent; cursor: text; outline: none; min-height: 1.6rem;
+  transition: border-color 0.15s; max-width: 480px;
+}
+.wb-wheel-title:empty::before { content: attr(data-placeholder); color: var(--text-soft); font-weight: 400; }
+.wb-wheel-title:focus { border-color: var(--c-marigold); background: var(--surface); }
+
+/* FLOATING SOUND BUTTON near wheel */
+.wb-sound-btn {
+  position: absolute; top: 0.4rem; right: 0.4rem; z-index: 3;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 99px;
+  width: 34px; height: 34px; font-size: 0.95rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+}
+.wb-sound-btn:hover { background: var(--surface-2); }
+
+/* Bigger wheel in the wide center column of the 2/3-panel band */
+@media (min-width: 1024px) {
+  .wheel-stage { width: min(40vw, 620px, 76vh); }
+}
+
+/* Editor panel (textarea + mode) lives inside the Entries tab — lighter chrome */
+.wb-editor {
+  border-radius: 12px; box-shadow: none; border: 1px solid var(--border);
+  padding: 0.9rem; margin-bottom: 0.75rem;
+}
+.wb-editor .entries-input { min-height: 9rem; }
+.wb-editor .action-row { margin-top: 0.6rem; }
+#wbEditorSlotMobile .wb-editor { margin-bottom: 0.9rem; }
+
+/* WHEEL BACKGROUND VARIANTS (applied to the full-bleed .hero band) */
+.hero[class*="wb-bg-"]::before { display: none; }
+/* keep the title + banner readable on a themed (usually dark) background */
+.hero[class*="wb-bg-"] .wb-wheel-title,
+.hero[class*="wb-bg-"] .winner-banner { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.45); }
+.hero[class*="wb-bg-"] .wb-wheel-title:empty::before { color: rgba(255,255,255,0.75); }
+.hero[class*="wb-bg-"] .wb-wheel-title:focus { background: rgba(0,0,0,0.25); }
+/* Idle pulse on the hub SPIN button — invites the first click */
+@keyframes wb-hub-pulse {
+  0%, 100% { box-shadow: 0 6px 16px rgba(0,0,0,0.25), 0 0 0 0 rgba(255,138,30,0.55); }
+  50%      { box-shadow: 0 6px 16px rgba(0,0,0,0.25), 0 0 0 14px rgba(255,138,30,0); }
+}
+.wheel-hub-btn { animation: wb-hub-pulse 2.4s ease-in-out infinite; }
+.wheel-hub-btn:disabled { animation: none; }
+@media (prefers-reduced-motion: reduce) { .wheel-hub-btn { animation: none; } }
+
+/* Comfier tap targets for the mobile tab bar */
+@media (max-width: 1023.98px) {
+  .wb-mobile-tab-btn { padding: 0.8rem 0.5rem; font-size: 0.86rem; }
+}
+
+/* BACK TO TOP — appears after scrolling 25% of the viewport */
+.wb-totop {
+  position: fixed; right: clamp(0.75rem, 2vw, 1.5rem); bottom: clamp(0.75rem, 2vw, 1.5rem);
+  width: 44px; height: 44px; border-radius: 50%; z-index: 90;
+  background: var(--c-marigold); color: #fff; border: 2px solid var(--surface);
+  font-size: 1.25rem; font-weight: 800; line-height: 1; cursor: pointer;
+  box-shadow: var(--shadow-md);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transform: translateY(10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.wb-totop.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.wb-totop:hover { background: var(--c-marigold-deep); }
+@media (prefers-reduced-motion: reduce) { .wb-totop { transition: none; transform: none; } }
+
+.wb-bg-nightsky { background: linear-gradient(135deg,#0f0c29,#302b63,#24243e) !important; }
+.wb-bg-sunset   { background: linear-gradient(135deg,#f7971e,#f5576c) !important; }
+.wb-bg-ocean    { background: linear-gradient(135deg,#2193b0,#6dd5ed) !important; }
+.wb-bg-forest   { background: linear-gradient(135deg,#134e5e,#71b280) !important; }
+.wb-bg-dusk     { background: linear-gradient(135deg,#c94b4b,#4b134f) !important; }
+.wb-bg-gold     { background: linear-gradient(135deg,#f7971e,#ffd200) !important; }

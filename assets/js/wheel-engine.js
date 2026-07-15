@@ -26,6 +26,90 @@
   ];
   const CONFETTI_COLORS = ['#FF8A1E', '#E5247B', '#0FA3A3', '#FFC53D', '#7C4DFF', '#2BB673'];
 
+  /* ---------- selectable wheel palettes ---------- */
+  const PALETTES = [
+    { key: 'original', label: 'Original', colors: ['#FF8A1E', '#E5247B', '#0FA3A3', '#FFC53D', '#7C4DFF', '#2BB673', '#FF5A5F', '#3D8BFD'] },
+    { key: 'pastel',   label: 'Pastel',   colors: ['#FFB3BA', '#FFD8A8', '#FCF3A0', '#B5EAD7', '#A0D8F0', '#D6BCFA', '#FBB6CE', '#9AE6D9'] },
+    { key: 'ocean',    label: 'Ocean',    colors: ['#023E8A', '#0077B6', '#0096C7', '#00B4D8', '#48CAE4', '#0FA3A3', '#2A9D8F', '#1D6FA3'] },
+    { key: 'sunset',   label: 'Sunset',   colors: ['#FF4500', '#FF6347', '#FF7F50', '#FFA07A', '#FFB703', '#FB8500', '#E76F51', '#F4A261'] },
+    { key: 'forest',   label: 'Forest',   colors: ['#1B4332', '#2D6A4F', '#40916C', '#52B788', '#74C69D', '#95D5B2', '#2E8B57', '#3CB371'] },
+    { key: 'mono',     label: 'Mono',     colors: ['#31363F', '#3F444E', '#4E545F', '#5D646F', '#6C7480', '#7C8490', '#454B54', '#222831'] }
+  ];
+
+  /* ---------- selectable backgrounds behind the wheel ---------- */
+  const BG_THEMES = [
+    { key: 'default',  label: 'Default', css: null,            preview: 'linear-gradient(135deg,#FF8A1E,#FFC53D)' },
+    { key: 'nightsky', label: 'Night',   css: 'wb-bg-nightsky', preview: 'linear-gradient(135deg,#0f0c29,#302b63)' },
+    { key: 'sunset',   label: 'Sunset',  css: 'wb-bg-sunset',   preview: 'linear-gradient(135deg,#f7971e,#f5576c)' },
+    { key: 'ocean',    label: 'Ocean',   css: 'wb-bg-ocean',    preview: 'linear-gradient(135deg,#2193b0,#6dd5ed)' },
+    { key: 'forest',   label: 'Forest',  css: 'wb-bg-forest',   preview: 'linear-gradient(135deg,#134e5e,#71b280)' },
+    { key: 'dusk',     label: 'Dusk',    css: 'wb-bg-dusk',     preview: 'linear-gradient(135deg,#c94b4b,#4b134f)' },
+    { key: 'gold',     label: 'Gold',    css: 'wb-bg-gold',     preview: 'linear-gradient(135deg,#f7971e,#ffd200)' }
+  ];
+
+  /* ---------- spin sound (WebAudio, no assets) ---------- */
+  const WheelSound = (function () {
+    let ctx = null, muted = false, volume = 0.15;
+    function init() {
+      if (ctx) return;
+      try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ctx = null; }
+    }
+    function resume() { if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} } }
+    function tick() {
+      if (muted || !ctx || prefersReduced) return;
+      resume();
+      try {
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.value = 185 + Math.random() * 55;
+        gain.gain.setValueAtTime(volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.06);
+        osc.start(now); osc.stop(now + 0.06);
+      } catch (e) {}
+    }
+    function winnerSound() {
+      if (muted || !ctx || prefersReduced) return;
+      resume();
+      [523.25, 659.25, 783.99].forEach(function (f, i) {
+        try {
+          const t0 = ctx.currentTime + i * 0.12;
+          const osc = ctx.createOscillator(), gain = ctx.createGain();
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.type = 'sine'; osc.frequency.value = f;
+          gain.gain.setValueAtTime(0.0001, t0);
+          gain.gain.linearRampToValueAtTime(volume * 0.85, t0 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0008, t0 + 0.24);
+          osc.start(t0); osc.stop(t0 + 0.24);
+        } catch (e) {}
+      });
+    }
+    return {
+      init: init, tick: tick, winnerSound: winnerSound,
+      setMuted: function (v) { muted = !!v; },
+      setVolume: function (v) { volume = Math.max(0, Math.min(1, parseFloat(v) || 0)); },
+      isMuted: function () { return muted; }
+    };
+  })();
+
+  /* ---------- team-branded segment badge (IPL page etc.) ---------- */
+  function drawTeamBadge(g, cx, cy, angle, radius, team) {
+    const br = radius * 0.8;
+    const bx = cx + br * Math.cos(angle);
+    const by = cy + br * Math.sin(angle);
+    const s = Math.max(12, radius * 0.085);
+    g.save();
+    g.beginPath(); g.arc(bx, by, s, 0, TAU);
+    g.fillStyle = team.textColor || '#fff'; g.fill();
+    g.lineWidth = 2; g.strokeStyle = team.color || '#000'; g.stroke();
+    g.fillStyle = team.color || '#000';
+    g.font = '700 ' + Math.max(7, s * 0.6) + "px 'Baloo 2', 'Segoe UI', sans-serif";
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(team.abbr || '', bx, by);
+    g.restore();
+  }
+
   function cryptoRandom() {
     if (window.crypto && window.crypto.getRandomValues) {
       const u = new Uint32Array(1);
@@ -367,6 +451,9 @@
         if (n > 1 && i === n - 1 && color === SEGMENT_COLORS[0]) {
           color = SEGMENT_COLORS[(i + 2) % SEGMENT_COLORS.length];
         }
+        // team-branded pages: colour the segment by team when a mapping exists
+        const teamInfo = window.WB_TEAM_DATA && window.WB_TEAM_DATA[state.entries[i]];
+        if (teamInfo && teamInfo.color) color = teamInfo.color;
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.arc(cx, cy, radius, start, end);
@@ -406,6 +493,8 @@
         if (text !== label && text.length > 1) text = text.slice(0, -1) + '…';
         ctx.fillText(text, radius - size * 0.05, 0);
         ctx.restore();
+
+        if (teamInfo) drawTeamBadge(ctx, cx, cy, start + seg / 2, radius, teamInfo);
       }
 
       // subtle center ring under the hub
@@ -432,6 +521,7 @@
       if (n < 2) { announce(t('winner.needMore')); toast(t('winner.needMore')); return; }
 
       state.spinning = true;
+      WheelSound.init();
       setSpinUI(true);
       els.banner.classList.remove('has-winner');
 
@@ -447,15 +537,19 @@
       if (delta < 0) delta += TAU;
       const totalDelta = turns * TAU + delta;
 
-      const duration = prefersReduced ? 600 : 4200 + randInt(700);
+      const duration = prefersReduced ? 600 : Math.round((state.spinDur || 4) * 1000);
       const startTime = performance.now();
 
+      let lastTickSeg = -1;
       function frame(now) {
         const elapsed = now - startTime;
         const p = Math.min(1, elapsed / duration);
         const eased = easeOutQuart(p);
         state.rotation = startRot + totalDelta * eased;
         draw();
+        // click a tick each time a new segment passes under the pointer
+        const curSeg = Math.floor((((-state.rotation) % TAU) + TAU) % TAU / seg);
+        if (curSeg !== lastTickSeg) { lastTickSeg = curSeg; WheelSound.tick(); }
         if (p < 1) {
           requestAnimationFrame(frame);
         } else {
@@ -482,6 +576,7 @@
           updateUrl();
           updateMeta();
           draw();
+          afterEntriesChanged(true);
           if (state.entries.length === 1) {
             const last = state.entries[0];
             state.lastWinner = last;
@@ -529,8 +624,12 @@
 
     /* ---------- history ---------- */
     function addHistory(name, kind) {
-      state.history.unshift({ name: name, kind: kind || 'winner' });
+      const k = kind || 'winner';
+      state.history.unshift({ name: name, kind: k, ts: Date.now() });
       renderHistory();
+      syncResultsPanel();
+      activateTab('results');
+      if (k === 'winner') WheelSound.winnerSound();
     }
     function renderHistory() {
       if (!els.history) return;
@@ -574,6 +673,7 @@
       updateMeta();
       setSpinUI(false);
       draw();
+      afterEntriesChanged(true);
     }
 
     /* ---------- URL state ---------- */
@@ -686,6 +786,8 @@
         const a0 = rot + i * seg, a1 = a0 + seg;
         let color = SEGMENT_COLORS[i % SEGMENT_COLORS.length];
         if (n > 1 && i === n - 1 && color === SEGMENT_COLORS[0]) color = SEGMENT_COLORS[(i + 2) % SEGMENT_COLORS.length];
+        const teamC = window.WB_TEAM_DATA && window.WB_TEAM_DATA[entries[i]];
+        if (teamC && teamC.color) color = teamC.color;
         g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, r, a0, a1); g.closePath();
         g.fillStyle = color; g.fill();
         if (i === winIdx) {                       // highlight the winning slice
@@ -811,6 +913,7 @@
         state.entries = state.original.slice();
         syncInputFromEntries();
         draw();
+        afterEntriesChanged(true);
       }
       applyMode();
       updateUrl();
@@ -828,6 +931,7 @@
       syncInputFromEntries();
       updateUrl();
       draw();
+      afterEntriesChanged(true);
     }
     function reset() {
       if (state.spinning) return;
@@ -842,6 +946,8 @@
       updateMeta();
       setSpinUI(false);
       draw();
+      afterEntriesChanged(true);
+      syncResultsPanel();
     }
 
     /* ---------- winner popup (random mode only) ---------- */
@@ -884,6 +990,298 @@
       ));
     }
 
+    /* ==================================================================
+       Side panels, customize (palette/background/sound), editable title,
+       localStorage entry recovery, tab switching. All inside initWheel so
+       they share `state`, `draw`, `SEGMENT_COLORS`, `els`, `spin`, `params`.
+       ================================================================== */
+    const PAGE_KEY = 'wb_' + (location.pathname.replace(/[^a-z0-9]+/gi, '_') || 'home');
+    function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+    function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+    /* ----- entries panel ----- */
+    function renderEntryList(listEl, badgeEl) {
+      if (badgeEl) badgeEl.textContent = String(state.entries.length);
+      if (!listEl) return;
+      listEl.textContent = '';
+      state.entries.forEach((name, i) => {
+        const li = document.createElement('li');
+        li.className = 'wb-entry-item';
+        const dot = document.createElement('span');
+        dot.className = 'wb-entry-dot';
+        const ti = window.WB_TEAM_DATA && window.WB_TEAM_DATA[name];
+        dot.style.background = (ti && ti.color) || SEGMENT_COLORS[i % SEGMENT_COLORS.length];
+        const nm = document.createElement('span');
+        nm.className = 'wb-entry-name';
+        nm.textContent = name;
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'wb-entry-del';
+        del.setAttribute('aria-label', 'Remove ' + name);
+        del.textContent = '×';
+        del.addEventListener('click', () => removeEntryAt(i));
+        li.appendChild(dot); li.appendChild(nm); li.appendChild(del);
+        listEl.appendChild(li);
+      });
+    }
+    function syncEntriesPanel() {
+      renderEntryList(document.getElementById('wbEntriesList'), document.getElementById('entryCountBadge'));
+      renderEntryList(document.getElementById('wbEntriesListMobile'), document.getElementById('mobileEntryBadge'));
+    }
+    function persistEntries() {
+      if (state.entries.length) lsSet(PAGE_KEY + '_entries', JSON.stringify(state.entries));
+      else lsDel(PAGE_KEY + '_entries');
+    }
+    function afterEntriesChanged(persist) {
+      syncEntriesPanel();
+      if (persist) persistEntries();
+    }
+    function removeEntryAt(i) {
+      if (state.spinning) return;
+      state.entries.splice(i, 1);
+      state.original = state.entries.slice();
+      syncInputFromEntries();
+      updateUrl();
+      updateMeta();
+      setSpinUI(false);
+      draw();
+      afterEntriesChanged(true);
+    }
+    function setEntries(arr) {
+      state.entries = arr.slice();
+      state.original = state.entries.slice();
+      syncInputFromEntries();
+      updateUrl();
+      updateMeta();
+      setSpinUI(false);
+      draw();
+      afterEntriesChanged(true);
+    }
+
+    /* ----- results panel ----- */
+    function renderResultList(listEl, emptyEl) {
+      if (!listEl) return;
+      listEl.textContent = '';
+      if (state.history.length === 0) {
+        if (emptyEl) emptyEl.hidden = false;
+        return;
+      }
+      if (emptyEl) emptyEl.hidden = true;
+      state.history.forEach((item) => {
+        const li = document.createElement('li');
+        li.className = 'wb-result-item ' + (item.kind === 'eliminated' ? 'eliminated' : 'winner');
+        const icon = document.createElement('span');
+        icon.className = 'wb-result-icon';
+        icon.textContent = item.kind === 'eliminated' ? '❌' : '🏆';
+        const label = document.createElement('span');
+        label.className = 'wb-result-label';
+        label.textContent = item.name;
+        const time = document.createElement('span');
+        time.className = 'wb-result-time';
+        time.textContent = item.ts ? new Date(item.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        li.appendChild(icon); li.appendChild(label); li.appendChild(time);
+        listEl.appendChild(li);
+      });
+    }
+    function syncResultsPanel() {
+      renderResultList(document.getElementById('wbResultsList'), document.getElementById('wbResultsEmpty'));
+      renderResultList(document.getElementById('wbResultsListMobile'), document.getElementById('wbResultsEmptyMobile'));
+    }
+
+    /* ----- tabs (desktop + mobile mirror) ----- */
+    function activateTab(tab) {
+      document.querySelectorAll('.wb-tab-btn').forEach((b) => {
+        const on = b.dataset.tab === tab;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      document.querySelectorAll('.wb-tab-pane').forEach((p) => p.classList.toggle('active', p.id === 'tab-pane-' + tab));
+      document.querySelectorAll('.wb-mobile-tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.mtab === tab));
+      document.querySelectorAll('.wb-mobile-tab-pane').forEach((p) => p.classList.toggle('active', p.id === 'mobile-pane-' + tab));
+      if (tab === 'results') syncResultsPanel();
+      if (tab === 'entries') syncEntriesPanel();
+    }
+    function wireTabs() {
+      document.querySelectorAll('.wb-tab-btn').forEach((b) => b.addEventListener('click', () => activateTab(b.dataset.tab)));
+      document.querySelectorAll('.wb-mobile-tab-btn').forEach((b) => b.addEventListener('click', () => activateTab(b.dataset.mtab)));
+    }
+
+    /* ----- colour palette ----- */
+    function applyPalette(key, persist) {
+      const pal = PALETTES.find((p) => p.key === key) || PALETTES[0];
+      SEGMENT_COLORS.length = 0;
+      pal.colors.forEach((c) => SEGMENT_COLORS.push(c));
+      state.palette = pal.key;
+      if (persist) lsSet('wb_palette', pal.key);
+      draw();
+      syncEntriesPanel();
+      document.querySelectorAll('[data-wb-palette]').forEach((b) => b.classList.toggle('active', b.dataset.wbPalette === pal.key));
+    }
+    function renderPaletteGrids() {
+      ['wbPaletteGrid', 'wbPaletteGridMobile'].forEach((id) => {
+        const grid = document.getElementById(id);
+        if (!grid) return;
+        grid.textContent = '';
+        PALETTES.forEach((pal) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'wb-palette-btn' + (pal.key === state.palette ? ' active' : '');
+          btn.dataset.wbPalette = pal.key;
+          btn.setAttribute('aria-label', 'Colour palette: ' + pal.label);
+          const sw = document.createElement('span');
+          sw.className = 'wb-palette-swatch';
+          pal.colors.slice(0, 5).forEach((c) => {
+            const d = document.createElement('span');
+            d.className = 'wb-swatch-dot';
+            d.style.background = c;
+            sw.appendChild(d);
+          });
+          btn.appendChild(sw);
+          btn.appendChild(document.createTextNode(pal.label));
+          btn.addEventListener('click', () => applyPalette(pal.key, true));
+          grid.appendChild(btn);
+        });
+      });
+    }
+
+    /* ----- background ----- */
+    function applyBg(key, persist) {
+      // paint the whole hero band (full-bleed) rather than just the wheel column
+      const band = document.querySelector('.hero') || document.querySelector('.wb-tool-center');
+      const bg = BG_THEMES.find((b) => b.key === key) || BG_THEMES[0];
+      if (band) {
+        BG_THEMES.forEach((b) => { if (b.css) band.classList.remove(b.css); });
+        if (bg.css) band.classList.add(bg.css);
+      }
+      state.bg = bg.key;
+      if (persist) lsSet('wb_bg', bg.key);
+      document.querySelectorAll('[data-wb-bg]').forEach((b) => b.classList.toggle('active', b.dataset.wbBg === bg.key));
+    }
+    function renderBgGrids() {
+      ['wbBgGrid', 'wbBgGridMobile'].forEach((id) => {
+        const grid = document.getElementById(id);
+        if (!grid) return;
+        grid.textContent = '';
+        BG_THEMES.forEach((bg) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'wb-bg-btn' + (bg.key === state.bg ? ' active' : '');
+          btn.dataset.wbBg = bg.key;
+          btn.style.background = bg.preview;
+          btn.textContent = bg.label;
+          btn.setAttribute('aria-label', 'Background: ' + bg.label);
+          btn.addEventListener('click', () => applyBg(bg.key, true));
+          grid.appendChild(btn);
+        });
+      });
+    }
+
+    /* ----- editable wheel title ----- */
+    function initTitle() {
+      const el = document.getElementById('wbWheelTitle');
+      if (!el) return;
+      const saved = lsGet(PAGE_KEY + '_title');
+      if (saved && saved.trim()) el.textContent = saved;
+      el.addEventListener('input', () => {
+        if (el.textContent.length > 60) {
+          el.textContent = el.textContent.slice(0, 60);
+          const range = document.createRange(); const sel = window.getSelection();
+          range.selectNodeContents(el); range.collapse(false);
+          sel.removeAllRanges(); sel.addRange(range);
+        }
+        lsSet(PAGE_KEY + '_title', el.textContent.trim());
+      });
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+    }
+
+    /* ----- spin duration control ----- */
+    function wireSpinDuration() {
+      const saved = parseFloat(lsGet('wb_spin_dur'));
+      state.spinDur = (!isNaN(saved) && saved >= 1 && saved <= 8) ? saved : 4;
+      const sliders = document.querySelectorAll('.wb-dur-slider');
+      const labels = document.querySelectorAll('.wb-dur-value');
+      const render = () => {
+        sliders.forEach((s) => { s.value = state.spinDur; });
+        labels.forEach((l) => { l.textContent = state.spinDur + 's'; });
+      };
+      render();
+      sliders.forEach((slider) => {
+        slider.addEventListener('input', () => {
+          const v = parseFloat(slider.value);
+          if (!isNaN(v)) { state.spinDur = v; lsSet('wb_spin_dur', String(v)); render(); }
+        });
+      });
+    }
+
+    /* ----- sound controls ----- */
+    function updateSoundIcons() {
+      const icon = WheelSound.isMuted() ? '🔇' : '🔊';
+      document.querySelectorAll('.wb-sound-icon').forEach((b) => { b.textContent = icon; });
+    }
+    function wireSound() {
+      const savedVol = parseFloat(lsGet('wb_sound_vol'));
+      if (!isNaN(savedVol)) WheelSound.setVolume(savedVol);
+      WheelSound.setMuted(lsGet('wb_sound_mute') === '1');
+      document.querySelectorAll('.wb-sound-slider').forEach((s) => { if (!isNaN(savedVol)) s.value = savedVol; });
+      updateSoundIcons();
+      document.querySelectorAll('.wb-sound-icon').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          WheelSound.init();
+          WheelSound.setMuted(!WheelSound.isMuted());
+          lsSet('wb_sound_mute', WheelSound.isMuted() ? '1' : '0');
+          updateSoundIcons();
+        });
+      });
+      document.querySelectorAll('.wb-sound-slider').forEach((slider) => {
+        slider.addEventListener('input', () => {
+          WheelSound.init();
+          const v = parseFloat(slider.value);
+          WheelSound.setVolume(v);
+          WheelSound.setMuted(v === 0);
+          lsSet('wb_sound_vol', String(v));
+          lsSet('wb_sound_mute', v === 0 ? '1' : '0');
+          document.querySelectorAll('.wb-sound-slider').forEach((s) => { s.value = slider.value; });
+          updateSoundIcons();
+        });
+      });
+    }
+
+    /* ----- localStorage entry recovery ----- */
+    function checkRestore() {
+      if (params.has('names')) return;
+      const raw = lsGet(PAGE_KEY + '_entries');
+      if (!raw) return;
+      let saved = null;
+      try { saved = JSON.parse(raw); } catch (e) { return; }
+      if (!Array.isArray(saved) || saved.length === 0) return;
+      if (JSON.stringify(saved) === JSON.stringify(state.entries)) return;
+      const banner = document.getElementById('wbRestoreBanner');
+      if (!banner) return;
+      const countEl = document.getElementById('wbRestoreCount');
+      if (countEl) countEl.textContent = String(saved.length);
+      banner.classList.add('visible');
+      const yes = document.getElementById('wbRestoreYes');
+      const no = document.getElementById('wbRestoreNo');
+      if (yes) yes.addEventListener('click', () => { banner.classList.remove('visible'); setEntries(saved); });
+      if (no) no.addEventListener('click', () => { banner.classList.remove('visible'); });
+    }
+
+    /* ----- editor panel placement (single node moved between desktop tab
+       and mobile tab slots; moving preserves all bound listeners) ----- */
+    function placeEditorPanel() {
+      const editor = document.getElementById('wbEditorPanel');
+      if (!editor) return;
+      const mq = window.matchMedia('(min-width: 1024px)');
+      const place = () => {
+        const slot = document.getElementById(mq.matches ? 'wbEditorSlotDesktop' : 'wbEditorSlotMobile');
+        if (slot && editor.parentNode !== slot) slot.appendChild(editor);
+      };
+      place();
+      if (mq.addEventListener) mq.addEventListener('change', place);
+      else if (mq.addListener) mq.addListener(place);
+    }
+
     /* ---------- wire up ---------- */
     syncInputFromEntries();
     updateMeta();
@@ -922,15 +1320,49 @@
     resize();
     updateUrl();
 
+    // ---- new UI subsystems ----
+    placeEditorPanel();
+    initTitle();
+    applyPalette(lsGet('wb_palette') || 'original', false);
+    renderPaletteGrids();
+    applyBg(lsGet('wb_bg') || 'default', false);
+    renderBgGrids();
+    wireTabs();
+    wireSound();
+    wireSpinDuration();
+    syncEntriesPanel();
+    syncResultsPanel();
+    checkRestore();
+
     return { redraw: draw };
   }
 
   /* ----------------------------------------------------------------------
      Footer year + boot
      ---------------------------------------------------------------------- */
+  function setupBackToTop() {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'wb-totop';
+    btn.setAttribute('aria-label', 'Back to top');
+    btn.textContent = '↑';
+    document.body.appendChild(btn);
+    btn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: prefersReduced ? 'auto' : 'smooth' });
+    });
+    let visible = false;
+    const check = () => {
+      const show = window.scrollY > window.innerHeight * 0.25;
+      if (show !== visible) { visible = show; btn.classList.toggle('visible', show); }
+    };
+    window.addEventListener('scroll', check, { passive: true });
+    check();
+  }
+
   function boot() {
     const yearEl = document.querySelector('[data-year]');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
+    setupBackToTop();
 
     setupLanguage();
     const app = { redraw: null };
